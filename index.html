@@ -935,43 +935,29 @@ function openCollectionDetail(collectionName) {
     </div>
     
     <div style="margin-top: 3rem;">
-      <h3 style="margin-bottom: 1rem; font-weight: 600;">Cartas (${totalCards})</h3>
+      <h3 style="margin-bottom: 1.5rem; font-weight: 600;">Cartas (${totalCards})</h3>
       
-      <div class="cards-gallery" id="cardsGallery">
-        ${data.cards.map((card, idx) => `
-          <div style="display: flex; flex-direction: column; position: relative;">
-            <div style="position: absolute; top: 8px; left: 8px; z-index: 10;">
-              <input type="checkbox" ${card.collected ? 'checked' : ''} onchange="toggleCardCollected('${collectionName}', ${idx})" style="width: 20px; height: 20px; cursor: pointer;">
-            </div>
-            
-            <div class="card-item-gallery ${card.image ? '' : 'no-image'}" style="filter: ${!card.collected ? 'grayscale(100%)' : 'none'}; opacity: ${!card.collected ? '0.7' : '1'};">
-              ${card.image ? `<img src="${card.image}" alt="${card.name}">` : '🎴'}
-              <div class="card-item-overlay">
-                <button onclick="editCardImage('${collectionName}', ${idx})">Foto</button>
-                <button onclick="removeCard('${collectionName}', ${idx})">Deletar</button>
-              </div>
-            </div>
-            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.4rem;" class="card-name-container-${idx}">
-              <div id="cardName-${idx}" style="font-size: 12px; font-weight: 500; color: #1a1a1a; word-break: break-word; flex: 1;">
-                ${card.name}
-              </div>
-              <button onclick="editCardName('${collectionName}', ${idx})" style="background: none; border: none; color: #999; cursor: pointer; font-size: 12px; opacity: 0; transition: opacity 0.2s; padding: 0.2rem;" class="edit-card-btn-${idx}">✏️</button>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      
-      <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-        <button class="btn btn-primary" style="flex: 1; min-width: 150px;" onclick="openImportCollectedModal('${collectionName}')">📥 Importar coletadas</button>
-      </div>
-      
-      <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 4px;">
-        <label>Adicionar nova carta</label>
-        <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; margin-top: 0.75rem;">
-          <input type="text" id="newCardName" placeholder="Nome e código (ex: Pikachu 25/102)">
-          <button class="btn btn-primary" onclick="addNewCard('${collectionName}')" style="width: auto; min-width: 120px;">Adicionar</button>
+      <!-- FILTROS -->
+      <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 200px;">
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #666;">Filtrar por Ano</label>
+          <select id="filterYear" onchange="applyFilters('${collectionName}')" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="">Todos os anos</option>
+            ${[...new Set(data.cards.filter(c => c.ano).map(c => c.ano))].sort().map(year => `<option value="${year}">${year}</option>`).join('')}
+          </select>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 200px;">
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #666;">Filtrar por Coleção</label>
+          <select id="filterSet" onchange="applyFilters('${collectionName}')" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+            <option value="">Todas as coleções</option>
+            ${[...new Set(data.cards.filter(c => c.colecao).map(c => c.colecao))].sort().map(set => `<option value="${set}">${set}</option>`).join('')}
+          </select>
         </div>
       </div>
+      
+      <!-- GRUPOS DE CARTAS -->
+      <div id="cardsGroupsContainer"></div>
     </div>
     
     <div class="modal-buttons">
@@ -980,6 +966,11 @@ function openCollectionDetail(collectionName) {
   `;
   
   document.getElementById('modal').classList.add('active');
+  
+  // Renderizar grupos de cartas após abrir a modal
+  setTimeout(() => {
+    renderCardGroups(collectionName, data.cards);
+  }, 10);
 }
 
 function openEditCollectionCoverModal(collectionName) {
@@ -1111,6 +1102,9 @@ function saveCardImage() {
 
 function addNewCard(collectionName) {
   const cardName = document.getElementById('newCardName').value.trim();
+  const cardYear = document.getElementById('newCardYear').value.trim();
+  const cardSet = document.getElementById('newCardSet').value.trim();
+  
   if (!cardName) {
     alert('Digite o nome da carta');
     return;
@@ -1119,12 +1113,16 @@ function addNewCard(collectionName) {
   const collections = getCollections();
   collections[collectionName].cards.push({
     name: cardName,
+    ano: cardYear,
+    colecao: cardSet,
     image: null,
     collected: false
   });
   
   saveCollections(collections);
   document.getElementById('newCardName').value = '';
+  document.getElementById('newCardYear').value = '';
+  document.getElementById('newCardSet').value = '';
   openCollectionDetail(collectionName);
 }
 
@@ -1184,6 +1182,82 @@ function toggleCardCollected(collectionName, cardIndex) {
   collections[collectionName].cards[cardIndex].collected = !collections[collectionName].cards[cardIndex].collected;
   saveCollections(collections);
   openCollectionDetail(collectionName);
+}
+
+function renderCardGroups(collectionName, cards) {
+  const filterYear = document.getElementById('filterYear')?.value || '';
+  const filterSet = document.getElementById('filterSet')?.value || '';
+  
+  // Filtrar cartas
+  let filteredCards = cards;
+  if (filterYear) filteredCards = filteredCards.filter(c => c.ano === filterYear);
+  if (filterSet) filteredCards = filteredCards.filter(c => c.colecao === filterSet);
+  
+  // Agrupar por "ano - colecao"
+  const groups = {};
+  filteredCards.forEach((card) => {
+    const ano = card.ano || 'Sem ano';
+    const colecao = card.colecao || 'Sem coleção';
+    const groupKey = `${ano} - ${colecao}`;
+    
+    if (!groups[groupKey]) {
+      groups[groupKey] = [];
+    }
+    groups[groupKey].push(card);
+  });
+  
+  // Renderizar grupos
+  const container = document.getElementById('cardsGroupsContainer');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  Object.entries(groups).sort().forEach(([groupName, groupCards]) => {
+    const groupDiv = document.createElement('div');
+    groupDiv.style.marginBottom = '3rem';
+    
+    groupDiv.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f0f0f0;">
+        <span style="font-size: 14px; font-weight: 600; color: #1a1a1a;">📅 ${groupName}</span>
+        <span style="font-size: 12px; color: #999;">${groupCards.length} carta${groupCards.length !== 1 ? 's' : ''}</span>
+      </div>
+      
+      <div class="cards-gallery" style="margin-bottom: 2rem;">
+        ${groupCards.map((card) => {
+          const originalIdx = cards.indexOf(card);
+          return `
+            <div style="display: flex; flex-direction: column; position: relative;">
+              <div style="position: absolute; top: 8px; left: 8px; z-index: 10;">
+                <input type="checkbox" ${card.collected ? 'checked' : ''} onchange="toggleCardCollected('${collectionName}', ${originalIdx})" style="width: 20px; height: 20px; cursor: pointer;">
+              </div>
+              
+              <div class="card-item-gallery ${card.image ? '' : 'no-image'}" style="filter: ${!card.collected ? 'grayscale(100%)' : 'none'}; opacity: ${!card.collected ? '0.7' : '1'};">
+                ${card.image ? `<img src="${card.image}" alt="${card.name}">` : '🎴'}
+                <div class="card-item-overlay">
+                  <button onclick="editCardImage('${collectionName}', ${originalIdx})">Foto</button>
+                  <button onclick="removeCard('${collectionName}', ${originalIdx})">Deletar</button>
+                </div>
+              </div>
+              <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                <div style="font-size: 12px; font-weight: 500; color: #1a1a1a; word-break: break-word; flex: 1;">
+                  ${card.name}
+                </div>
+                <button onclick="editCardName('${collectionName}', ${originalIdx})" style="background: none; border: none; color: #999; cursor: pointer; font-size: 12px; opacity: 0; transition: opacity 0.2s; padding: 0.2rem;">✏️</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    
+    container.appendChild(groupDiv);
+  });
+}
+
+function applyFilters(collectionName) {
+  const collections = getCollections();
+  const data = collections[collectionName];
+  renderCardGroups(collectionName, data.cards);
 }
 
 function openImportCollectedModal(collectionName) {
