@@ -1139,10 +1139,10 @@ input:focus, select:focus, textarea:focus {
             <summary style="cursor: pointer; font-weight: 600;">📖 Formato CSV</summary>
             <div style="margin-top: 1rem; font-size: 13px; color: #555;">
               <code style="display: block; background: white; padding: 0.75rem; border-radius: 4px; overflow-x: auto;">
-name,set,number<br/>
-Charizard,Base Set,006<br/>
-Blastoise,Base Set,009<br/>
-Venusaur,Base Set,003
+name,set,number,image_url<br/>
+Charizard,Base Set,006,https://...<br/>
+Blastoise,Base Set,009,https://...<br/>
+Venusaur,Base Set,003,https://...
               </code>
             </div>
           </details>
@@ -1152,9 +1152,9 @@ Venusaur,Base Set,003
             <div style="margin-top: 1rem; font-size: 13px; color: #555;">
               <code style="display: block; background: white; padding: 0.75rem; border-radius: 4px; overflow-x: auto;">
 [<br/>
-&nbsp;&nbsp;{ "name": "Charizard", "set": "Base Set", "number": "006" },<br/>
-&nbsp;&nbsp;{ "name": "Blastoise", "set": "Base Set", "number": "009" },<br/>
-&nbsp;&nbsp;{ "name": "Venusaur", "set": "Base Set", "number": "003" }<br/>
+&nbsp;&nbsp;{ "name": "Charizard", "set": "Base Set", "number": "006", "image_url": "https://..." },<br/>
+&nbsp;&nbsp;{ "name": "Blastoise", "set": "Base Set", "number": "009", "image_url": "https://..." },<br/>
+&nbsp;&nbsp;{ "name": "Venusaur", "set": "Base Set", "number": "003", "image_url": "https://..." }<br/>
 ]
               </code>
             </div>
@@ -1624,98 +1624,141 @@ function generateProxysPDF() {
 
   const cardsPerLine = parseInt(document.getElementById('proxysCardsPerLine').value) || 3;
   
-  // Criar container invisível para o PDF
-  const pdfContainer = document.createElement('div');
-  pdfContainer.style.position = 'absolute';
-  pdfContainer.style.left = '-9999px';
-  pdfContainer.style.width = '210mm';
-  pdfContainer.style.background = 'white';
-  pdfContainer.style.fontFamily = 'Arial, sans-serif';
-  
-  // Calcular dimensões das cartas
-  const pageWidth = 210; // mm
-  const pageHeight = 297; // mm
-  const margin = 5; // mm
-  const cardWidth = (pageWidth - (margin * 2)) / cardsPerLine;
-  const cardHeight = cardWidth * 1.4; // Proporção 3:4
-  const cardsPerPage = Math.floor((pageHeight - (margin * 2)) / cardHeight);
-  
-  // Dividir cartas em páginas
-  const pages = [];
-  for (let i = 0; i < proxysFilteredData.length; i += (cardsPerLine * cardsPerPage)) {
-    pages.push(proxysFilteredData.slice(i, i + (cardsPerLine * cardsPerPage)));
-  }
-  
-  // Criar HTML das páginas
-  let pdfHTML = '';
-  pages.forEach((pageCards, pageIdx) => {
-    pdfHTML += `
-      <div style="width: 210mm; height: 297mm; padding: 5mm; box-sizing: border-box; page-break-after: always; display: grid; grid-template-columns: repeat(${cardsPerLine}, 1fr); gap: 0; grid-auto-rows: ${cardHeight}mm;">
-    `;
-    
-    pageCards.forEach(card => {
-      pdfHTML += `
-        <div style="border: 1px dashed #999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5mm; box-sizing: border-box; text-align: center; font-size: 11px;">
-          <div style="font-weight: 600; margin-bottom: 0.3mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%;">
-            ${escapeHtml(card.name || 'Desconhecido')}
-          </div>
-          <div style="color: #666; font-size: 10px;">
-            ${escapeHtml(card.set || '')} #${escapeHtml(card.number || '')}
-          </div>
-        </div>
-      `;
+  // Mostrar carregamento
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ Gerando PDF...';
+  btn.disabled = true;
+
+  // Carregar todas as imagens
+  const imagePromises = proxysFilteredData.map(card => {
+    return new Promise(resolve => {
+      if (!card.image_url) {
+        resolve({ ...card, imageData: null });
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve({ ...card, imageData: canvas.toDataURL('image/png') });
+      };
+      img.onerror = () => {
+        resolve({ ...card, imageData: null });
+      };
+      img.src = card.image_url;
     });
-    
-    pdfHTML += '</div>';
   });
-  
-  pdfContainer.innerHTML = pdfHTML;
-  document.body.appendChild(pdfContainer);
-  
-  // Gerar PDF
-  html2canvas(pdfContainer, {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    backgroundColor: '#ffffff'
-  }).then(canvas => {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+
+  Promise.all(imagePromises).then(cardsWithImages => {
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.position = 'absolute';
+    pdfContainer.style.left = '-9999px';
+    pdfContainer.style.width = '210mm';
+    pdfContainer.style.background = 'white';
+    pdfContainer.style.fontFamily = 'Arial, sans-serif';
     
-    const imgData = canvas.toDataURL('image/png');
-    const imgWidth = 210;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    // Calcular dimensões das cartas
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 5;
+    const cardWidth = (pageWidth - (margin * 2)) / cardsPerLine;
+    const cardHeight = cardWidth * 1.4;
+    const cardsPerPage = Math.floor((pageHeight - (margin * 2)) / cardHeight);
     
-    let yPosition = 0;
-    let pageHeight = pdf.internal.pageSize.getHeight();
-    
-    // Adicionar imagens ao PDF
-    pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
-    
-    // Se houver múltiplas páginas, adicionar as demais
-    let remainingHeight = imgHeight - pageHeight;
-    while (remainingHeight > 0) {
-      yPosition = -pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
-      remainingHeight -= pageHeight;
+    // Dividir cartas em páginas
+    const pages = [];
+    for (let i = 0; i < cardsWithImages.length; i += (cardsPerLine * cardsPerPage)) {
+      pages.push(cardsWithImages.slice(i, i + (cardsPerLine * cardsPerPage)));
     }
     
-    // Baixar PDF
-    const fileName = `proxies-${new Date().toISOString().split('T')[0]}.pdf`;
-    pdf.save(fileName);
+    // Criar HTML das páginas
+    let pdfHTML = '';
+    pages.forEach((pageCards, pageIdx) => {
+      pdfHTML += `
+        <div style="width: 210mm; height: 297mm; padding: 5mm; box-sizing: border-box; page-break-after: always; display: grid; grid-template-columns: repeat(${cardsPerLine}, 1fr); gap: 0; grid-auto-rows: ${cardHeight}mm;">
+      `;
+      
+      pageCards.forEach(card => {
+        const imageHtml = card.imageData 
+          ? `<img src="${card.imageData}" style="width: 100%; height: 70%; object-fit: cover; border-bottom: 1px solid #999;">`
+          : `<div style="width: 100%; height: 70%; background: #f0f0f0; border-bottom: 1px solid #999; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 24px;">🎴</div>`;
+
+        pdfHTML += `
+          <div style="border: 1px dashed #999; display: flex; flex-direction: column; padding: 0; box-sizing: border-box; text-align: center; font-size: 11px; overflow: hidden;">
+            ${imageHtml}
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5mm; gap: 0.2mm;">
+              <div style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%; font-size: 10px;">
+                ${escapeHtml(card.name || 'Desconhecido')}
+              </div>
+              <div style="color: #666; font-size: 9px;">
+                ${escapeHtml(card.set || '')} #${escapeHtml(card.number || '')}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      pdfHTML += '</div>';
+    });
     
-    // Limpar
-    document.body.removeChild(pdfContainer);
+    pdfContainer.innerHTML = pdfHTML;
+    document.body.appendChild(pdfContainer);
     
-    alert(`✅ PDF gerado: ${fileName}`);
+    // Gerar PDF
+    html2canvas(pdfContainer, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff'
+    }).then(canvas => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let yPosition = 0;
+      let pageHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
+      
+      let remainingHeight = imgHeight - pageHeight;
+      while (remainingHeight > 0) {
+        yPosition = -pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
+        remainingHeight -= pageHeight;
+      }
+      
+      const fileName = `proxies-${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      document.body.removeChild(pdfContainer);
+      btn.textContent = originalText;
+      btn.disabled = false;
+      
+      alert(`✅ PDF gerado com imagens: ${fileName}`);
+    }).catch(err => {
+      document.body.removeChild(pdfContainer);
+      btn.textContent = originalText;
+      btn.disabled = false;
+      alert('❌ Erro ao gerar PDF: ' + err.message);
+    });
   }).catch(err => {
-    document.body.removeChild(pdfContainer);
-    alert('❌ Erro ao gerar PDF: ' + err.message);
+    btn.textContent = originalText;
+    btn.disabled = false;
+    alert('❌ Erro ao carregar imagens: ' + err.message);
   });
 }
 
