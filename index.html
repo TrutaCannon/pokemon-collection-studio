@@ -971,7 +971,6 @@ function renderBlindModalGrid() {
   const grid = document.createElement('div');
   grid.className = 'blinder-modal-grid';
   grid.dataset.size = gridSize;
-  grid.style.transform = `scale(${blinderZoom / 100})`;
   
   for (let i = 0; i < slotCount; i++) {
     const slot = document.createElement('div');
@@ -1014,7 +1013,17 @@ function changeBlindZoom(delta) {
   
   const grid = document.querySelector('.blinder-modal-grid');
   if (grid) {
-    grid.style.transform = `scale(${blinderZoom / 100})`;
+    const zoomFactor = blinderZoom / 100;
+    grid.style.gap = (1.2 * zoomFactor) + 'rem';
+    grid.style.padding = (1.5 * zoomFactor) + 'rem';
+    
+    // Ajustar tamanho mínimo dos slots
+    const slots = document.querySelectorAll('.blinder-modal-slot');
+    slots.forEach(slot => {
+      slot.style.minWidth = (140 * zoomFactor) + 'px';
+      slot.style.minHeight = (180 * zoomFactor) + 'px';
+      slot.style.fontSize = (64 * zoomFactor) + 'px';
+    });
   }
 }
 
