@@ -585,6 +585,151 @@ input:focus, select:focus, textarea:focus {
   object-fit: cover;
 }
 
+/* BLINDER FULLSCREEN MODAL */
+.blinder-fullscreen-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+  background: #f5f5f5;
+  z-index: 999;
+  flex-direction: column;
+}
+
+.blinder-fullscreen-modal.active {
+  display: flex;
+}
+
+.blinder-modal-header {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.blinder-modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.blinder-modal-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.blinder-modal-grid {
+  display: grid;
+  gap: 1.2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s;
+}
+
+.blinder-modal-grid[data-size="3"] {
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+}
+
+.blinder-modal-grid[data-size="4"] {
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+}
+
+.blinder-modal-grid[data-size="5"] {
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+}
+
+.blinder-modal-grid[data-size="6"] {
+  grid-template-columns: repeat(6, minmax(110px, 1fr));
+}
+
+.blinder-modal-slot {
+  aspect-ratio: 3/4;
+  background: #f0f0f0;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+  font-size: 64px;
+  color: #ccc;
+  user-select: none;
+  min-width: 140px;
+  min-height: 180px;
+}
+
+.blinder-modal-slot:hover {
+  background: #e8e8e8;
+  border-color: #aaa;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.blinder-modal-slot.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+  transform: scale(0.95);
+}
+
+.blinder-modal-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.blinder-modal-slot-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 5;
+}
+
+.blinder-modal-slot:hover .blinder-modal-slot-overlay {
+  opacity: 1;
+}
+
+.blinder-modal-slot-overlay button {
+  padding: 0.5rem 1rem;
+  background: #ffcc00;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.blinder-modal-slot-overlay button:hover {
+  background: #ffd700;
+  transform: scale(1.05);
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .sidebar {
@@ -712,6 +857,30 @@ input:focus, select:focus, textarea:focus {
 
 </div>
 
+<!-- BLINDER FULLSCREEN MODAL -->
+<div id="blinderModal" class="blinder-fullscreen-modal">
+  <div class="blinder-modal-header">
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <h2 style="margin: 0;">🎴 Construtor de Blinder</h2>
+      <div class="grid-size-buttons">
+        <button class="grid-btn active" onclick="setBlindSize(3)">3x3</button>
+        <button class="grid-btn" onclick="setBlindSize(4)">4x4</button>
+        <button class="grid-btn" onclick="setBlindSize(5)">5x5</button>
+        <button class="grid-btn" onclick="setBlindSize(6)">6x6</button>
+      </div>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button class="btn" onclick="changeBlindZoom(-10)">🔍−</button>
+      <span id="zoomLevel" style="font-weight: 600; min-width: 60px;">100%</span>
+      <button class="btn" onclick="changeBlindZoom(10)">🔍+</button>
+      <button class="btn btn-primary" onclick="saveBlindImage()">💾 Salvar</button>
+      <button class="btn" onclick="closeBlindModal()" style="background: #f44336; color: white;">✕ Fechar</button>
+    </div>
+  </div>
+  
+  <div id="blinderModalContainer" class="blinder-modal-container"></div>
+</div>
+
 <!-- MODAL -->
 <div id="modal" class="modal">
   <div class="modal-content">
@@ -768,6 +937,194 @@ function switchTab(tab) {
   if (tab === 'diary') {
     renderCollections();
   }
+  if (tab === 'blinder') {
+    openBlindModal();
+  }
+}
+
+// BLINDER BUILDER FULLSCREEN
+let blinderSize = 3;
+let blinderSlots = [];
+let blinderZoom = 100;
+
+function openBlindModal() {
+  document.getElementById('blinderModal').classList.add('active');
+  renderBlindModalGrid();
+}
+
+function closeBlindModal() {
+  document.getElementById('blinderModal').classList.remove('active');
+}
+
+function renderBlindModalGrid() {
+  const container = document.getElementById('blinderModalContainer');
+  const gridSize = blinderSize;
+  const slotCount = gridSize * gridSize;
+  
+  container.innerHTML = '';
+  blinderSlots = [];
+  
+  const grid = document.createElement('div');
+  grid.className = 'blinder-modal-grid';
+  grid.dataset.size = gridSize;
+  grid.style.transform = `scale(${blinderZoom / 100})`;
+  
+  for (let i = 0; i < slotCount; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'blinder-modal-slot';
+    slot.draggable = true;
+    slot.dataset.slotId = i;
+    slot.innerHTML = '🎴';
+    
+    slot.addEventListener('dragstart', blindDragStart);
+    slot.addEventListener('dragover', blindDragOver);
+    slot.addEventListener('drop', blindDrop);
+    slot.addEventListener('dragend', blindDragEnd);
+    
+    slot.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      openBlindSlotImageUpload(i);
+    });
+    
+    grid.appendChild(slot);
+    blinderSlots.push({ id: i, image: null });
+  }
+  
+  container.appendChild(grid);
+}
+
+function setBlindSize(size) {
+  blinderSize = size;
+  blinderZoom = 100;
+  document.getElementById('zoomLevel').textContent = '100%';
+  
+  document.querySelectorAll('.grid-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  renderBlindModalGrid();
+}
+
+function changeBlindZoom(delta) {
+  blinderZoom = Math.max(50, Math.min(200, blinderZoom + delta));
+  document.getElementById('zoomLevel').textContent = blinderZoom + '%';
+  
+  const grid = document.querySelector('.blinder-modal-grid');
+  if (grid) {
+    grid.style.transform = `scale(${blinderZoom / 100})`;
+  }
+}
+
+let draggedBlindSlot = null;
+
+function blindDragStart(e) {
+  draggedBlindSlot = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function blindDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (this !== draggedBlindSlot) {
+    this.style.opacity = '0.7';
+  }
+}
+
+function blindDrop(e) {
+  e.preventDefault();
+  if (this !== draggedBlindSlot) {
+    const draggedImage = draggedBlindSlot.innerHTML;
+    const draggedSlotId = draggedBlindSlot.dataset.slotId;
+    const thisSlotId = this.dataset.slotId;
+    
+    const draggedData = blinderSlots[draggedSlotId];
+    const thisData = blinderSlots[thisSlotId];
+    
+    blinderSlots[draggedSlotId] = thisData;
+    blinderSlots[thisSlotId] = draggedData;
+    
+    draggedBlindSlot.innerHTML = this.innerHTML;
+    this.innerHTML = draggedImage;
+  }
+}
+
+function blindDragEnd(e) {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.blinder-modal-slot').forEach(slot => {
+    slot.style.opacity = '1';
+  });
+}
+
+function openBlindSlotImageUpload(slotId) {
+  currentModal = 'blindSlotImage';
+  window.editingSlotId = slotId;
+  
+  document.getElementById('modalTitle').textContent = `Adicionar imagem ao slot ${slotId + 1}`;
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Selecione uma imagem de carta</label>
+      <div class="image-upload" onclick="document.getElementById('blindImageInput').click()">
+        <input type="file" id="blindImageInput" accept="image/*" onchange="previewBlindImage(event)">
+        <p>Clique aqui ou arraste uma imagem</p>
+      </div>
+      ${blinderSlots[slotId].image ? `<img src="${blinderSlots[slotId].image}" class="image-preview" id="blindImagePreview">` : ''}
+    </div>
+    
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBlindSlotImage()">Salvar imagem</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+}
+
+function previewBlindImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const preview = document.getElementById('blindImagePreview');
+    if (preview) {
+      preview.src = e.target.result;
+    } else {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'image-preview';
+      img.id = 'blindImagePreview';
+      event.target.parentElement.appendChild(img);
+    }
+    window.tempBlindImage = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveBlindSlotImage() {
+  if (!window.tempBlindImage) {
+    alert('Selecione uma imagem');
+    return;
+  }
+  
+  blinderSlots[window.editingSlotId].image = window.tempBlindImage;
+  
+  const slot = document.querySelector(`[data-slot-id="${window.editingSlotId}"]`);
+  if (slot) {
+    slot.innerHTML = `<img src="${window.tempBlindImage}" alt="Carta">`;
+  }
+  
+  closeModal();
+}
+
+function saveBlindImage() {
+  const grid = document.querySelector('.blinder-modal-grid');
+  if (!grid) {
+    alert('Crie uma organização primeiro');
+    return;
+  }
+  
+  alert('💾 Função de exportação será implementada em breve! Por enquanto, use Print (Ctrl+P) para salvar como PDF.');
 }
 
 // COLLECTIONS
