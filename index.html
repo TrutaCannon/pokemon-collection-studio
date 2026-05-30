@@ -732,6 +732,59 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* PROXYS GENERATOR */
+.proxys-how-section {
+  background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+  padding: 3rem 2rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.proxys-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.proxys-step {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  transition: transform 0.2s;
+}
+
+.proxys-step:hover {
+  transform: translateY(-4px);
+  border-color: #ffcc00;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.proxys-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #000;
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.proxys-step h3 {
+  margin: 1rem 0 0.5rem 0;
+  font-size: 18px;
+}
+
+.proxys-step p {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
 .proxys-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -824,6 +877,73 @@ input:focus, select:focus, textarea:focus {
 
 .proxys-card-item:hover .proxys-card-item-overlay {
   opacity: 1;
+}
+
+/* PROXYS PDF PREVIEW */
+.proxys-pdf-preview {
+  background: white;
+  padding: 2rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.proxys-page {
+  width: 210mm;
+  height: 297mm;
+  background: white;
+  border: 1px solid #999;
+  display: grid;
+  gap: 0;
+  margin: 0 auto 2rem;
+  padding: 0;
+  page-break-after: always;
+}
+
+.proxys-page.four-cols {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+}
+
+.proxys-page.three-cols {
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+}
+
+.proxys-page.five-cols {
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+}
+
+.proxys-card-slot {
+  border: 1px dashed #999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+  font-size: 13px;
+  position: relative;
+  overflow: hidden;
+}
+
+.proxys-card-slot-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.proxys-card-slot-number {
+  color: #666;
+  font-size: 11px;
+}
+
+@media print {
+  .proxys-page {
+    margin: 0;
+    border: none;
+    page-break-after: always;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -967,101 +1087,135 @@ input:focus, select:focus, textarea:focus {
   <div id="proxys" class="tab-content">
     <div class="header">
       <h1>🖨️ Gerador de Proxys</h1>
-      <p>Importe cartas e gere PDFs otimizados para impressão</p>
+      <p>Crie e baixe PDFs de proxies de cartas para preencher seu fichário</p>
     </div>
 
-    <div class="proxys-container">
-      <!-- UPLOAD SECTION -->
-      <div class="proxys-upload-section">
-        <h2>1️⃣ Importar Cartas</h2>
-        <p style="color: #666; font-size: 14px;">Envie um arquivo CSV ou JSON com dados das cartas</p>
-        
-        <div class="proxys-upload-area" onclick="document.getElementById('proxysFileInput').click()">
-          <input type="file" id="proxysFileInput" accept=".csv,.json" onchange="handleProxysFileUpload(event)" style="display: none;">
-          <div style="font-size: 32px; margin-bottom: 1rem;">📋</div>
-          <p><strong>Clique ou arraste um arquivo</strong></p>
-          <small>Formatos: CSV ou JSON</small>
+    <!-- HOW IT WORKS SECTION -->
+    <div class="proxys-how-section">
+      <h2 style="text-align: center; margin-bottom: 2rem;">Como Funciona</h2>
+      <p style="text-align: center; color: #666; max-width: 800px; margin: 0 auto 3rem;">
+        Selecione um set, nome de Pokémon ou artista para gerar um PDF cheio de proxies para preencher os espaços vazios no seu fichário.
+      </p>
+      
+      <div class="proxys-steps-grid">
+        <div class="proxys-step">
+          <div class="proxys-step-number">1</div>
+          <div style="font-size: 32px; margin: 1rem 0;">🔍</div>
+          <h3>Buscar</h3>
+          <p>Escolha um método de busca: Por Set, Nome do Pokémon ou Artista.</p>
         </div>
+        
+        <div class="proxys-step">
+          <div class="proxys-step-number">2</div>
+          <div style="font-size: 32px; margin: 1rem 0;">⚙️</div>
+          <h3>Configurar</h3>
+          <p>Insira os detalhes necessários com base no método de busca escolhido.</p>
+        </div>
+        
+        <div class="proxys-step">
+          <div class="proxys-step-number">3</div>
+          <div style="font-size: 32px; margin: 1rem 0;">📥</div>
+          <h3>Baixar</h3>
+          <p>Clique em 'Baixar Proxies' para gerar seu PDF.</p>
+        </div>
+      </div>
+    </div>
 
-        <details style="margin-top: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 4px;">
-          <summary style="cursor: pointer; font-weight: 600;">📖 Formato esperado</summary>
-          <div style="margin-top: 1rem; font-size: 13px; color: #555;">
-            <p><strong>CSV:</strong></p>
-            <code style="display: block; background: white; padding: 0.75rem; border-radius: 4px; overflow-x: auto;">
-name,set,number,artist,image_url<br/>
-Charizard,Base Set,006,Ken Sugimori,https://...<br/>
-Blastoise,Base Set,009,Ken Sugimori,https://...
-            </code>
-            
-            <p style="margin-top: 1rem;"><strong>JSON:</strong></p>
-            <code style="display: block; background: white; padding: 0.75rem; border-radius: 4px; overflow-x: auto;">
+    <div style="border-top: 2px solid #f0f0f0; margin: 3rem 0; padding-top: 3rem;">
+      <div class="proxys-container">
+        <!-- UPLOAD SECTION -->
+        <div class="proxys-upload-section">
+          <h2>1️⃣ Importar Cartas</h2>
+          <p style="color: #666; font-size: 14px;">Envie um arquivo CSV ou JSON com dados das cartas</p>
+          
+          <div class="proxys-upload-area" onclick="document.getElementById('proxysFileInput').click()">
+            <input type="file" id="proxysFileInput" accept=".csv,.json" onchange="handleProxysFileUpload(event)" style="display: none;">
+            <div style="font-size: 32px; margin-bottom: 1rem;">📋</div>
+            <p><strong>Clique ou arraste um arquivo</strong></p>
+            <small>Formatos: CSV ou JSON</small>
+          </div>
+
+          <details style="margin-top: 1rem; padding: 1rem; background: #f5f5f5; border-radius: 4px;">
+            <summary style="cursor: pointer; font-weight: 600;">📖 Formato CSV</summary>
+            <div style="margin-top: 1rem; font-size: 13px; color: #555;">
+              <code style="display: block; background: white; padding: 0.75rem; border-radius: 4px; overflow-x: auto;">
+name,set,number<br/>
+Charizard,Base Set,006<br/>
+Blastoise,Base Set,009<br/>
+Venusaur,Base Set,003
+              </code>
+            </div>
+          </details>
+
+          <details style="margin-top: 0.5rem; padding: 1rem; background: #f5f5f5; border-radius: 4px;">
+            <summary style="cursor: pointer; font-weight: 600;">📖 Formato JSON</summary>
+            <div style="margin-top: 1rem; font-size: 13px; color: #555;">
+              <code style="display: block; background: white; padding: 0.75rem; border-radius: 4px; overflow-x: auto;">
 [<br/>
-&nbsp;&nbsp;{<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"name": "Charizard",<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"set": "Base Set",<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"number": "006",<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"artist": "Ken Sugimori",<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;"image_url": "https://..."<br/>
-&nbsp;&nbsp;}<br/>
+&nbsp;&nbsp;{ "name": "Charizard", "set": "Base Set", "number": "006" },<br/>
+&nbsp;&nbsp;{ "name": "Blastoise", "set": "Base Set", "number": "009" },<br/>
+&nbsp;&nbsp;{ "name": "Venusaur", "set": "Base Set", "number": "003" }<br/>
 ]
-            </code>
-          </div>
-        </details>
-      </div>
+              </code>
+            </div>
+          </details>
 
-      <!-- CONTROLS SECTION -->
-      <div id="proxysControlsSection" class="proxys-controls-section" style="display: none;">
-        <h2>2️⃣ Configurar</h2>
-        
-        <div class="proxys-controls-grid">
-          <div class="form-group">
-            <label>Buscar por Set</label>
-            <input type="text" id="proxysFilterSet" placeholder="Ex: Base Set" onkeyup="filterProxysCards()">
-          </div>
-          
-          <div class="form-group">
-            <label>Buscar por Pokémon</label>
-            <input type="text" id="proxysFilterName" placeholder="Ex: Charizard" onkeyup="filterProxysCards()">
-          </div>
-          
-          <div class="form-group">
-            <label>Buscar por Artista</label>
-            <input type="text" id="proxysFilterArtist" placeholder="Ex: Ken Sugimori" onkeyup="filterProxysCards()">
-          </div>
-
-          <div class="form-group">
-            <label>Ordem das Cartas</label>
-            <select id="proxysOrder" onchange="filterProxysCards()">
-              <option value="asc">Antigas → Novas</option>
-              <option value="desc">Novas → Antigas</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Qualidade da Imagem</label>
-            <select id="proxysQuality">
-              <option value="compressed">Comprimida (menor arquivo)</option>
-              <option value="original">Original (melhor qualidade)</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Tamanho do Papel</label>
-            <select id="proxysPageSize">
-              <option value="a4">A4 (210x297mm)</option>
-              <option value="letter">Carta (216x279mm)</option>
-            </select>
-          </div>
+          <details style="margin-top: 0.5rem; padding: 1rem; background: #f0f8ff; border-radius: 4px;">
+            <summary style="cursor: pointer; font-weight: 600;">💡 Usar JSON Personalizado (com ChatGPT)</summary>
+            <div style="margin-top: 1rem; font-size: 13px; color: #555;">
+              <p>Use o ChatGPT para gerar um JSON customizado com este prompt:</p>
+              <p style="font-style: italic; background: white; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem;">
+                "Gere um JSON contendo os primeiros 151 Pokémon usando o seguinte formato: [ { "name": "CardName", "number": "1", "set": "Base Set" } ]"
+              </p>
+              <p style="margin-top: 1rem;">Depois, copie o JSON gerado e cole no campo abaixo.</p>
+              <textarea id="proxysCustomJSON" placeholder="Cole seu JSON aqui..." style="width: 100%; min-height: 150px; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 12px; margin-top: 1rem;"></textarea>
+              <button class="btn btn-secondary" onclick="loadCustomJSON()" style="margin-top: 1rem;">✅ Usar JSON Personalizado</button>
+            </div>
+          </details>
         </div>
 
-        <button class="btn btn-primary" onclick="generateProxysPDF()" style="margin-top: 1rem;">📥 Gerar PDF</button>
-      </div>
+        <!-- CONTROLS SECTION -->
+        <div id="proxysControlsSection" class="proxys-controls-section" style="display: none;">
+          <h2>2️⃣ Configurar</h2>
+          
+          <div class="proxys-controls-grid">
+            <div class="form-group">
+              <label>Buscar por Set</label>
+              <input type="text" id="proxysFilterSet" placeholder="Ex: Base Set" onkeyup="filterProxysCards()">
+            </div>
+            
+            <div class="form-group">
+              <label>Buscar por Pokémon</label>
+              <input type="text" id="proxysFilterName" placeholder="Ex: Charizard" onkeyup="filterProxysCards()">
+            </div>
+            
+            <div class="form-group">
+              <label>Ordem das Cartas</label>
+              <select id="proxysOrder" onchange="filterProxysCards()">
+                <option value="asc">Antigas → Novas</option>
+                <option value="desc">Novas → Antigas</option>
+              </select>
+            </div>
 
-      <!-- PREVIEW SECTION -->
-      <div id="proxysPreviewSection" class="proxys-preview-section" style="display: none;">
-        <h2>3️⃣ Visualizar</h2>
-        <p style="color: #666; font-size: 14px;">Total de cartas: <strong id="proxysCardCount">0</strong></p>
-        <div id="proxysPreviewGrid" class="proxys-preview-grid"></div>
+            <div class="form-group">
+              <label>Cartas por Linha</label>
+              <select id="proxysCardsPerLine">
+                <option value="3">3 cartas</option>
+                <option value="4">4 cartas</option>
+                <option value="5">5 cartas</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="generateProxysPDF()" style="margin-top: 1rem; width: 100%;">📥 Baixar Proxies</button>
+        </div>
+
+        <!-- PREVIEW SECTION -->
+        <div id="proxysPreviewSection" class="proxys-preview-section" style="display: none;">
+          <h2>3️⃣ Visualizar</h2>
+          <p style="color: #666; font-size: 14px;">Total de cartas: <strong id="proxysCardCount">0</strong></p>
+          <div id="proxysPreviewGrid" class="proxys-preview-grid"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1469,6 +1623,37 @@ function generateProxysPDF() {
   }
 
   alert('📥 Função de PDF será implementada em breve! Por enquanto, use Print (Ctrl+P) para gerar PDF do navegador.');
+}
+
+function loadCustomJSON() {
+  const jsonText = document.getElementById('proxysCustomJSON').value.trim();
+  
+  if (!jsonText) {
+    alert('Cole um JSON válido no campo');
+    return;
+  }
+
+  try {
+    const jsonData = JSON.parse(jsonText);
+    
+    if (!Array.isArray(jsonData)) {
+      alert('O JSON deve ser um array de objetos');
+      return;
+    }
+
+    proxysData = jsonData;
+    proxysFilteredData = [...proxysData];
+    
+    showProxysControls();
+    updateProxysPreview();
+    
+    // Limpar campo
+    document.getElementById('proxysCustomJSON').value = '';
+    
+    alert(`✅ ${proxysData.length} cartas carregadas do JSON personalizado!`);
+  } catch (error) {
+    alert('❌ Erro ao processar JSON: ' + error.message);
+  }
 }
 
 // COLLECTIONS
