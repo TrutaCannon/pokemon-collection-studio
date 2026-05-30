@@ -2137,6 +2137,8 @@ function generateProxysPDFWithData(cardsData) {
     alert('❌ Erro ao carregar imagens: ' + err.message);
   });
 }
+
+function loadCustomJSON() {
   const jsonText = document.getElementById('proxysCustomJSON').value.trim();
   
   if (!jsonText) {
