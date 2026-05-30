@@ -393,11 +393,6 @@ h2 {
   font-weight: 500;
 }
 
-.card-item-code {
-  color: #999;
-  font-size: 12px;
-}
-
 .card-item-details {
   color: #999;
   font-size: 11px;
@@ -433,6 +428,15 @@ h2 {
 
 .import-preview-item.error {
   border-left-color: #f44336;
+}
+
+.import-preview-item.found {
+  border-left-color: #4caf50;
+}
+
+.import-preview-item.not-found {
+  border-left-color: #ff9800;
+  opacity: 0.7;
 }
 
 .summary-grid {
@@ -471,7 +475,7 @@ h2 {
   <header>
     <div class="logo">🎴 Pokémon Collection Studio</div>
     <nav>
-      <a href="#" onclick="alert('v4.0 - Importação por código + Barra de progresso'); return false;">Sobre</a>
+      <a href="#" onclick="alert('v5.0 - Marcar múltiplas cartas'); return false;">Sobre</a>
       <a href="https://wa.me/5581991594716?text=Oi!%20Vi%20seu%20Pokémon%20Collection%20Studio" target="_blank">Contato</a>
     </nav>
   </header>
@@ -479,10 +483,16 @@ h2 {
   <!-- Hero -->
   <section class="hero">
     <h1>Organize sua coleção de Pokémon</h1>
-    <p>Importe listas de cartas por código, acompanhe seu progresso e complete suas coleções.</p>
+    <p>Importe listas de cartas, marque múltiplas de uma vez e acompanhe seu progresso em tempo real.</p>
     <div class="cta-group">
       <button class="btn" onclick="switchTab('diary')">Começar agora</button>
-      <button class="btn btn-outline" onclick="alert('Como usar:\n\n1. Crie uma coleção\n2. Clique em Importar\n3. Cole: Pikachu 21/124\n4. Marque conforme obtém\n5. Veja a barra preencher!')">Ver guia</button>
+      <button class="btn btn-outline" onclick="alert('Como usar:
+
+1. Crie uma coleção
+2. Importe lista de cartas
+3. Use Marcar Múltiplas
+4. Cole cartas já obtidas
+5. Pronto! Tudo marcado!')">Ver guia</button>
     </div>
   </section>
 
@@ -498,7 +508,7 @@ h2 {
   <div id="diary" class="tab-content active">
     <section>
       <h2>Suas coleções</h2>
-      <p class="section-subtitle">Importe suas listas e acompanhe o progresso em tempo real</p>
+      <p class="section-subtitle">Importe listas, marque múltiplas cartas e veja o progresso em tempo real</p>
 
       <div class="card" style="max-width: 500px; margin-bottom: 2rem;">
         <h3>Criar nova coleção</h3>
@@ -721,7 +731,8 @@ function renderCollections() {
       
       <div class="action-buttons">
         <button class="btn btn-secondary btn-sm" onclick="openAddCardModal('${name}')">+ Adicionar</button>
-        <button class="btn btn-sm" onclick="openImportCardsModal('${name}')">📥 Importar</button>
+        <button class="btn btn-secondary btn-sm" onclick="openImportCardsModal('${name}')">📥 Importar</button>
+        <button class="btn btn-sm" onclick="openMarkMultipleModal('${name}')">✓ Marcar múltiplas</button>
       </div>
     `;
     container.appendChild(card);
@@ -802,6 +813,25 @@ function openImportCardsModal(collectionName) {
   });
 }
 
+function openMarkMultipleModal(collectionName) {
+  currentModal = 'markMultiple';
+  window.modalCollection = collectionName;
+  document.getElementById('modalTitle').textContent = `Marcar múltiplas cartas em ${collectionName}`;
+  document.getElementById('modalBody').innerHTML = `
+    <p class="text-muted" style="margin-bottom: 1rem;">Cole as cartas que você já tem (uma por linha). Formato: <strong>Nome Código</strong></p>
+    <div class="form-group">
+      <label>Cartas a marcar</label>
+      <textarea id="cardsToMark" placeholder="Pikachu 21/124&#10;Charizard 4/102&#10;Venusaur 15/102" style="height: 200px; font-family: monospace; font-size: 12px;"></textarea>
+    </div>
+    <div id="markPreview"></div>
+  `;
+  document.getElementById('modal').classList.add('active');
+  
+  document.getElementById('cardsToMark').addEventListener('input', () => {
+    previewMarkMultiple();
+  });
+}
+
 function previewCardsImport() {
   const csv = document.getElementById('cardsImport').value.trim();
   const preview = document.getElementById('importPreview');
@@ -811,7 +841,8 @@ function previewCardsImport() {
     return;
   }
   
-  const lines = csv.split('\n').filter(line => line.trim());
+  const lines = csv.split('
+').filter(line => line.trim());
   const parsed = lines.map((line, idx) => {
     if (line.trim()) {
       return {
@@ -831,6 +862,52 @@ function previewCardsImport() {
           <div class="import-preview-item ${p.valid ? '' : 'error'}">
             <div>${p.name}</div>
             <span style="color: #4caf50;">✓</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function previewMarkMultiple() {
+  const csv = document.getElementById('cardsToMark').value.trim();
+  const preview = document.getElementById('markPreview');
+  
+  if (!csv) {
+    preview.innerHTML = '';
+    return;
+  }
+  
+  const collections = getCollections();
+  const collectionName = window.modalCollection;
+  const cards = collections[collectionName].cards;
+  
+  const lines = csv.split('
+').filter(line => line.trim());
+  const parsed = lines.map(line => {
+    const cardName = line.trim().toLowerCase();
+    const found = cards.find(c => c.name.toLowerCase() === cardName);
+    return {
+      name: line.trim(),
+      found: !!found,
+      alreadyMarked: found && found.collected
+    };
+  });
+  
+  const foundCount = parsed.filter(p => p.found && !p.alreadyMarked).length;
+  
+  preview.innerHTML = `
+    <div style="margin-top: 1rem;">
+      <p class="text-muted" style="margin-bottom: 1rem;"><strong>${foundCount}</strong> cartas serão marcadas:</p>
+      <div class="import-preview">
+        ${parsed.map(p => `
+          <div class="import-preview-item ${p.found && !p.alreadyMarked ? 'found' : p.alreadyMarked ? 'not-found' : 'not-found'}">
+            <div>
+              ${p.name}
+              <div style="font-size: 11px; color: #999;">
+                ${p.found ? (p.alreadyMarked ? '(já estava marcada)' : '✓ Será marcada') : '⚠ Não encontrada'}
+              </div>
+            </div>
           </div>
         `).join('')}
       </div>
@@ -862,7 +939,8 @@ function saveModalData() {
       return;
     }
     
-    const lines = csv.split('\n').filter(line => line.trim());
+    const lines = csv.split('
+').filter(line => line.trim());
     const collections = getCollections();
     let count = 0;
     
@@ -882,7 +960,36 @@ function saveModalData() {
     saveCollections(collections);
     renderCollections();
     closeModal();
-    alert(`✓ ${count} cartas importadas!\n\nMarca conforme obtém para preencher a barra de progresso.`);
+    alert(`✓ ${count} cartas importadas!
+
+Marca conforme obtém para preencher a barra de progresso.`);
+  } else if (currentModal === 'markMultiple') {
+    const csv = document.getElementById('cardsToMark').value.trim();
+    if (!csv) {
+      alert('Cole as cartas a marcar');
+      return;
+    }
+    
+    const lines = csv.split('
+').filter(line => line.trim());
+    const collections = getCollections();
+    const collectionName = window.modalCollection;
+    let marked = 0;
+    
+    lines.forEach(line => {
+      const cardName = line.trim().toLowerCase();
+      const cardIndex = collections[collectionName].cards.findIndex(c => c.name.toLowerCase() === cardName);
+      
+      if (cardIndex !== -1 && !collections[collectionName].cards[cardIndex].collected) {
+        collections[collectionName].cards[cardIndex].collected = true;
+        marked++;
+      }
+    });
+    
+    saveCollections(collections);
+    renderCollections();
+    closeModal();
+    alert(`✓ ${marked} cartas marcadas como obtidas!`);
   } else if (currentModal === 'expense') {
     const item = document.getElementById('expenseItem').value.trim();
     const valor = parseFloat(document.getElementById('expenseValue').value) || 0;
