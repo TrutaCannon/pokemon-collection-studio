@@ -35,31 +35,10 @@ body {
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 3rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, #ffcc00, #ffdd33);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  user-select: none;
-}
-
-.sidebar-logo:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: linear-gradient(135deg, #ffdd33, #ffee44);
-}
-
-.sidebar-logo:active {
-  transform: scale(0.98);
 }
 
 .sidebar-logo-icon {
   font-size: 28px;
-  transition: transform 0.3s ease;
-}
-
-.sidebar-logo:hover .sidebar-logo-icon {
-  transform: rotate(10deg) scale(1.1);
 }
 
 .sidebar-nav {
@@ -1018,21 +997,8 @@ input:focus, select:focus, textarea:focus {
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sidebar-logo" onclick="switchTabHome()" style="cursor: pointer;">
-    <div class="sidebar-logo-icon" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;">
-        <!-- Top half - Red -->
-        <circle cx="50" cy="50" r="45" fill="#E0E0E0" stroke="#333" stroke-width="2"/>
-        <path d="M 5 50 A 45 45 0 0 1 95 50" fill="#EF5350" stroke="#333" stroke-width="2"/>
-        
-        <!-- Bottom half - White -->
-        <path d="M 5 50 A 45 45 0 0 1 95 50" fill="white" stroke="#333" stroke-width="2" transform="rotate(180 50 50)"/>
-        
-        <!-- Center circle -->
-        <circle cx="50" cy="50" r="12" fill="#333" stroke="#333" stroke-width="1"/>
-        <circle cx="50" cy="50" r="8" fill="white" stroke="none"/>
-      </svg>
-    </div>
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">⚪</div>
     <span>Collection</span>
   </div>
 
@@ -1380,16 +1346,6 @@ function switchTab(tab) {
   if (tab === 'proxys') {
     initializeProxysFromDiary();
   }
-}
-
-function switchTabHome() {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  
-  document.getElementById('diary').classList.add('active');
-  document.querySelector('.nav-item[onclick="switchTab(\'diary\')"]').classList.add('active');
-  
-  renderCollections();
 }
 
 // BLINDER BUILDER FULLSCREEN
