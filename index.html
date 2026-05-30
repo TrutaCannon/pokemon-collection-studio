@@ -717,10 +717,38 @@ input:focus, select:focus, textarea:focus {
 </div>
 
 <script>
-const STORAGE_KEY = 'pokemon_collections_v6';
+const STORAGE_KEY = 'pokemon_collections'; // MANTÉM COMPATIBILIDADE COM v5
 
 let currentModal = null;
 let editingCollectionName = null;
+
+// Migrar dados da v5 para v6 se necessário
+function migrateDataIfNeeded() {
+  const collections = getCollections();
+  
+  // Se alguma coleção não tem a estrutura v6, converte
+  Object.keys(collections).forEach(name => {
+    if (!collections[name].coverImage) {
+      collections[name] = {
+        cards: collections[name].cards || [],
+        coverImage: null,
+        createdAt: collections[name].createdAt || new Date().toISOString()
+      };
+    }
+    
+    // Se as cartas não têm imagem, adiciona o campo
+    collections[name].cards = collections[name].cards.map(card => ({
+      name: typeof card === 'string' ? card : card.name,
+      image: card.image || null,
+      collected: card.collected || false,
+      ano: card.ano,
+      ilustrador: card.ilustrador,
+      colecao: card.colecao
+    }));
+  });
+  
+  saveCollections(collections);
+}
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -1074,6 +1102,7 @@ function closeModal() {
 }
 
 // Initialize
+migrateDataIfNeeded();
 renderCollections();
 </script>
 
