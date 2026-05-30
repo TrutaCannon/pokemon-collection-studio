@@ -1575,6 +1575,13 @@ function closeModal() {
   window.tempCardImage = null;
 }
 
+// Fechar modal ao clicar fora (no overlay)
+document.getElementById('modal').addEventListener('click', function(event) {
+  if (event.target === this) {
+    closeModal();
+  }
+});
+
 // Initialize
 migrateDataIfNeeded();
 renderCollections();
