@@ -446,13 +446,14 @@ input:focus, select:focus, textarea:focus {
 /* COLLECTION DETAIL */
 .collection-detail-header {
   display: flex;
-  gap: 2rem;
+  gap: 3rem;
   margin-bottom: 3rem;
+  align-items: flex-start;
 }
 
 .collection-detail-cover {
-  width: 250px;
-  height: 300px;
+  width: 380px;
+  height: 500px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 8px;
   overflow: hidden;
@@ -476,7 +477,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .collection-detail-info h2 {
-  font-size: 28px;
+  font-size: 36px;
   font-weight: 700;
   margin-bottom: 1rem;
 }
@@ -904,7 +905,7 @@ function openCollectionDetail(collectionName) {
         </div>
         
         <div style="display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 2rem;">
-          <div id="collectionDesc" style="font-size: 13px; color: #666; line-height: 1.5; flex: 1;">${data.description || '📝 Adicionar descrição'}</div>
+          <div id="collectionDesc" style="font-size: 15px; color: #666; line-height: 1.6; flex: 1;">${data.description || '📝 Adicionar descrição'}</div>
           <button onclick="editCollectionDesc('${collectionName}')" style="background: none; border: none; color: #999; cursor: pointer; font-size: 12px; opacity: 0; transition: opacity 0.2s; padding: 0.2rem; flex-shrink: 0; margin-top: 0.2rem;" class="edit-collection-desc-btn">✏️</button>
         </div>
         
@@ -935,7 +936,7 @@ function openCollectionDetail(collectionName) {
     </div>
     
     <div style="margin-top: 3rem;">
-      <h3 style="margin-bottom: 1.5rem; font-weight: 600;">Cartas (${totalCards})</h3>
+      <h3 style="margin-bottom: 1.5rem; font-weight: 600; font-size: 20px;">Cartas (${totalCards})</h3>
       
       <!-- FILTROS -->
       <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
