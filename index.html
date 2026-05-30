@@ -409,6 +409,10 @@ input:focus, select:focus, textarea:focus {
   font-size: 32px;
 }
 
+[class*="card-name-container"]:hover button[class*="edit-card-btn"] {
+  opacity: 1 !important;
+}
+
 .card-item-overlay {
   position: absolute;
   top: 0;
@@ -915,8 +919,11 @@ function openCollectionDetail(collectionName) {
                 <button onclick="removeCard('${collectionName}', ${idx})">Deletar</button>
               </div>
             </div>
-            <div style="margin-top: 0.5rem; font-size: 12px; font-weight: 500; color: #1a1a1a; word-break: break-word;">
-              ${card.name}
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;" class="card-name-container-${idx}">
+              <div id="cardName-${idx}" style="font-size: 12px; font-weight: 500; color: #1a1a1a; word-break: break-word; flex: 1;">
+                ${card.name}
+              </div>
+              <button onclick="editCardName('${collectionName}', ${idx})" style="background: none; border: none; color: #999; cursor: pointer; font-size: 12px; opacity: 0; transition: opacity 0.2s; padding: 0.2rem;" class="edit-card-btn-${idx}">✏️</button>
             </div>
           </div>
         `).join('')}
@@ -1092,6 +1099,48 @@ function removeCard(collectionName, cardIndex) {
   collections[collectionName].cards.splice(cardIndex, 1);
   saveCollections(collections);
   openCollectionDetail(collectionName);
+}
+
+function editCardName(collectionName, cardIndex) {
+  editingCollectionName = collectionName;
+  window.editingCardIndex = cardIndex;
+  currentModal = 'editCardName';
+  
+  const collections = getCollections();
+  const card = collections[collectionName].cards[cardIndex];
+  
+  document.getElementById('modalTitle').textContent = `Editar nome da carta`;
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Nome e código da carta</label>
+      <input type="text" id="cardNameInput" value="${card.name}" autofocus>
+    </div>
+    
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCardNameEdit()">Salvar</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+  document.getElementById('cardNameInput').select();
+}
+
+function saveCardNameEdit() {
+  const newName = document.getElementById('cardNameInput').value.trim();
+  
+  if (!newName) {
+    alert('Digite um nome para a carta');
+    return;
+  }
+  
+  const collections = getCollections();
+  collections[editingCollectionName].cards[window.editingCardIndex].name = newName;
+  saveCollections(collections);
+  
+  closeModal();
+  openCollectionDetail(editingCollectionName);
 }
 
 function deleteCollection(collectionName) {
