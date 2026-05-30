@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Collection Studio</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  background: #ffffff;
+  color: #1a1a1a;
+  line-height: 1.6;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* Header & Nav */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 3rem;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+nav a {
+  margin-left: 2rem;
+  text-decoration: none;
+  color: #666;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+nav a:hover { color: #1a1a1a; }
+
+/* Hero */
+.hero {
+  margin: 4rem 0;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.hero p {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.btn {
+  padding: 0.875rem 1.75rem;
+  border: 1px solid #1a1a1a;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.btn:hover { background: #333; border-color: #333; }
+
+.btn-outline {
+  background: transparent;
+  color: #1a1a1a;
+}
+
+.btn-outline:hover { background: #f5f5f5; }
+
+/* Tabs */
+.tabs-container {
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid #f0f0f0;
+  margin: 3rem 0 2rem 0;
+  overflow-x: auto;
+}
+
+.tab-button {
+  padding: 1rem 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #999;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-button.active {
+  color: #1a1a1a;
+  border-bottom-color: #1a1a1a;
+}
+
+.tab-button:hover { color: #333; }
+
+/* Tab Content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Cards Grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.card {
+  border: 1px solid #f0f0f0;
+  padding: 2rem;
+  border-radius: 4px;
+  background: #ffffff;
+  transition: all 0.2s;
+}
+
+.card:hover {
+  border-color: #ddd;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.card h3 {
+  font-size: 18px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.card-progress-section {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.progress-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #1a1a1a;
+  transition: width 0.4s ease;
+}
+
+.progress-percentage {
+  font-size: 12px;
+  color: #999;
+  text-align: right;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #1a1a1a;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="month"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #1a1a1a;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal.active { display: flex; }
+
+.modal-content {
+  background: #fff;
+  border-radius: 4px;
+  padding: 2rem;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+/* Section */
+section {
+  margin: 4rem 0;
+}
+
+h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+/* Two Col */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .two-col { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 32px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .cta-group { flex-direction: column; }
+}
+
+.text-muted {
+  color: #999;
+  font-size: 13px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.75rem;
+}
+
+.btn-secondary {
+  background: #f5f5f5;
+  color: #1a1a1a;
+  border-color: #ddd;
+}
+
+.btn-secondary:hover {
+  background: #eee;
+}
+
+.delete-btn {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #999;
+  transition: all 0.2s;
+}
+
+.delete-btn:hover {
+  background: #ffebee;
+  border-color: #f44336;
+  color: #f44336;
+}
+
+.cards-list {
+  margin-top: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.card-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.card-item:hover {
+  border-color: #ddd;
+  background: #fafafa;
+}
+
+.card-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.card-item-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.card-item-code {
+  color: #999;
+  font-size: 12px;
+}
+
+.card-item-details {
+  color: #999;
+  font-size: 11px;
+  margin-top: 0.25rem;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.6rem;
+  font-size: 11px;
+}
+
+.import-preview {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.import-preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 3px;
+  margin-bottom: 0.5rem;
+  font-size: 13px;
+  border-left: 3px solid #4caf50;
+}
+
+.import-preview-item.error {
+  border-left-color: #f44336;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.summary-card {
+  border: 1px solid #f0f0f0;
+  padding: 1.5rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.summary-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0.5rem 0;
+}
+
+.summary-label {
+  font-size: 13px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div class="logo">🎴 Pokémon Collection Studio</div>
+    <nav>
+      <a href="#" onclick="alert('v4.0 - Importação por código + Barra de progresso'); return false;">Sobre</a>
+      <a href="https://wa.me/5581991594716?text=Oi!%20Vi%20seu%20Pokémon%20Collection%20Studio" target="_blank">Contato</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>Organize sua coleção de Pokémon</h1>
+    <p>Importe listas de cartas por código, acompanhe seu progresso e complete suas coleções.</p>
+    <div class="cta-group">
+      <button class="btn" onclick="switchTab('diary')">Começar agora</button>
+      <button class="btn btn-outline" onclick="alert('Como usar:\n\n1. Crie uma coleção\n2. Clique em Importar\n3. Cole: Pikachu 21/124\n4. Marque conforme obtém\n5. Veja a barra preencher!')">Ver guia</button>
+    </div>
+  </section>
+
+  <!-- Tabs Navigation -->
+  <div class="tabs-container">
+    <button class="tab-button active" onclick="switchTab('diary')">📔 Diário</button>
+    <button class="tab-button" onclick="switchTab('budget')">💰 Orçamento</button>
+    <button class="tab-button" onclick="switchTab('links')">🔗 Links</button>
+    <button class="tab-button" onclick="switchTab('wishlist')">⭐ Wishlist</button>
+  </div>
+
+  <!-- DIARY TAB -->
+  <div id="diary" class="tab-content active">
+    <section>
+      <h2>Suas coleções</h2>
+      <p class="section-subtitle">Importe suas listas e acompanhe o progresso em tempo real</p>
+
+      <div class="card" style="max-width: 500px; margin-bottom: 2rem;">
+        <h3>Criar nova coleção</h3>
+        <div class="form-group">
+          <label>Nome da coleção</label>
+          <input type="text" id="collectionName" placeholder="Ex: Base Set, Coleção 151...">
+        </div>
+        <button class="btn" style="width: 100%;" onclick="createCollection()">Criar coleção</button>
+      </div>
+
+      <div class="cards-grid" id="collectionsContainer"></div>
+    </section>
+  </div>
+
+  <!-- BUDGET TAB -->
+  <div id="budget" class="tab-content">
+    <section>
+      <h2>Rastreamento de orçamento</h2>
+      <p class="section-subtitle">Acompanhe seus gastos detalhadamente</p>
+
+      <!-- Filter -->
+      <div class="card">
+        <h3>Filtrar dados</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <input type="month" id="monthSelect" style="flex: 1; min-width: 150px;" placeholder="Selecionar mês" onchange="filterBudget()">
+          <select id="objectiveFilter" style="flex: 1; min-width: 150px;" onchange="filterBudget()">
+            <option value="">Todos os objetivos</option>
+            <option value="Completar coleção 151">Coleção 151</option>
+            <option value="Aniversario de matteo">Aniversário Matteo</option>
+            <option value="Lazer com Matteo">Lazer com Matteo</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">Total investido</div>
+          <div class="summary-value" id="totalSpent">R$ 0,00</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Número de compras</div>
+          <div class="summary-value" id="purchaseCount">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">Raras obtidas</div>
+          <div class="summary-value" id="rareCount">0</div>
+        </div>
+      </div>
+
+      <!-- Expenses -->
+      <div class="card">
+        <h3>Histórico de gastos</h3>
+        <div id="expensesContainer"></div>
+        <button class="btn btn-outline" style="width: 100%; margin-top: 1rem;" onclick="openAddExpenseModal()">+ Adicionar gasto</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- LINKS TAB -->
+  <div id="links" class="tab-content">
+    <section>
+      <h2>Links de pesquisa</h2>
+      <p class="section-subtitle">Guarde seus links favoritos de lojas</p>
+
+      <div class="card" style="max-width: 600px; margin-bottom: 2rem;">
+        <h3>Adicionar novo link</h3>
+        <div class="form-group">
+          <label>URL</label>
+          <input type="text" id="linkUrl" placeholder="https://mypcards.com/...">
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="linkDesc" placeholder="O que comprar nesse link?" style="height: 80px;"></textarea>
+        </div>
+        <button class="btn" style="width: 100%;" onclick="addLink()">Salvar link</button>
+      </div>
+
+      <div id="linksContainer"></div>
+    </section>
+  </div>
+
+  <!-- WISHLIST TAB -->
+  <div id="wishlist" class="tab-content">
+    <section>
+      <h2>Wishlist - Cartas para futuro</h2>
+      <p class="section-subtitle">Organize as cartas que você quer</p>
+
+      <div class="card" style="max-width: 600px; margin-bottom: 2rem;">
+        <h3>Adicionar carta à wishlist</h3>
+        <div class="form-group">
+          <label>Nome da carta</label>
+          <input type="text" id="wishlistCard" placeholder="Ex: Pikachu (150/151)">
+        </div>
+        <div class="two-col">
+          <div class="form-group">
+            <label>Coleção</label>
+            <input type="text" id="wishlistCollection" placeholder="Ex: Coleção 151">
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <input type="text" id="wishlistType" placeholder="Ex: Rara Holográfica">
+          </div>
+        </div>
+        <button class="btn" style="width: 100%;" onclick="addWishlistItem()">Adicionar à wishlist</button>
+      </div>
+
+      <div id="wishlistContainer"></div>
+    </section>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header" id="modalTitle">Modal</div>
+    <div id="modalBody"></div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveModalData()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'pokemon_collections';
+const BUDGET_KEY = 'pokemon_budget';
+const LINKS_KEY = 'pokemon_links';
+const WISHLIST_KEY = 'pokemon_wishlist';
+
+let currentModal = null;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  
+  const buttons = document.querySelectorAll('.tab-button');
+  buttons.forEach(btn => {
+    const text = btn.textContent;
+    if ((tab === 'diary' && text.includes('Diário')) ||
+        (tab === 'budget' && text.includes('Orçamento')) ||
+        (tab === 'links' && text.includes('Links')) ||
+        (tab === 'wishlist' && text.includes('Wishlist'))) {
+      btn.classList.add('active');
+    }
+  });
+
+  if (tab === 'budget') {
+    document.getElementById('monthSelect').valueAsDate = new Date();
+    filterBudget();
+  }
+  if (tab === 'links') {
+    renderLinks();
+  }
+  if (tab === 'wishlist') {
+    renderWishlist();
+  }
+}
+
+// COLLECTIONS
+function getCollections() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+}
+
+function saveCollections(collections) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(collections));
+}
+
+function createCollection() {
+  const name = document.getElementById('collectionName').value.trim();
+  if (!name) {
+    alert('Digite um nome para a coleção');
+    return;
+  }
+  
+  const collections = getCollections();
+  if (collections[name]) {
+    alert('Coleção já existe');
+    return;
+  }
+  
+  collections[name] = { cards: [], createdAt: new Date().toISOString() };
+  saveCollections(collections);
+  document.getElementById('collectionName').value = '';
+  renderCollections();
+}
+
+function renderCollections() {
+  const collections = getCollections();
+  const container = document.getElementById('collectionsContainer');
+  container.innerHTML = '';
+  
+  Object.entries(collections).forEach(([name, data]) => {
+    const totalCards = data.cards.length;
+    const collectedCards = data.cards.filter(c => c.collected).length;
+    const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
+    
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+        <h3>${name}</h3>
+        <button class="delete-btn" onclick="deleteCollection('${name}')">Deletar</button>
+      </div>
+      
+      <div class="card-progress-section">
+        <div class="progress-stats">
+          <div class="progress-label">Progresso</div>
+          <div class="progress-value">${collectedCards} / ${totalCards}</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${progress}%"></div>
+        </div>
+        <div class="progress-percentage">${progress.toFixed(0)}% completo</div>
+      </div>
+      
+      <div class="cards-list" id="cards-${name}"></div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-secondary btn-sm" onclick="openAddCardModal('${name}')">+ Adicionar</button>
+        <button class="btn btn-sm" onclick="openImportCardsModal('${name}')">📥 Importar</button>
+      </div>
+    `;
+    container.appendChild(card);
+    renderCards(name);
+  });
+}
+
+function renderCards(collectionName) {
+  const collections = getCollections();
+  const cardsContainer = document.getElementById(`cards-${collectionName}`);
+  cardsContainer.innerHTML = '';
+  
+  const cards = collections[collectionName].cards;
+  if (cards.length === 0) {
+    cardsContainer.innerHTML = '<p class="text-muted">Nenhuma carta adicionada ainda</p>';
+    return;
+  }
+  
+  cards.forEach((card, index) => {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'card-item';
+    cardEl.innerHTML = `
+      <input type="checkbox" ${card.collected ? 'checked' : ''} onchange="toggleCard('${collectionName}', ${index})">
+      <div style="flex: 1;">
+        <div class="card-item-name">${card.name}</div>
+        <div class="card-item-details">${card.ano || ''} ${card.ilustrador || ''} ${card.colecao || ''}`.trim() + `</div>
+      </div>
+      <button class="delete-btn" onclick="deleteCard('${collectionName}', ${index})">✕</button>
+    `;
+    cardsContainer.appendChild(cardEl);
+  });
+}
+
+function openAddCardModal(collectionName) {
+  currentModal = 'card';
+  window.modalCollection = collectionName;
+  document.getElementById('modalTitle').textContent = `Adicionar carta em ${collectionName}`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Nome e Código *</label>
+      <input type="text" id="cardName" placeholder="Ex: Pikachu 21/124" autofocus>
+    </div>
+    <p class="text-muted" style="margin-bottom: 1rem;">Os campos abaixo são opcionais:</p>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Ano</label>
+        <input type="text" id="cardYear" placeholder="2024">
+      </div>
+      <div class="form-group">
+        <label>Ilustrador</label>
+        <input type="text" id="cardIllustrator" placeholder="Ken Sugimori">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Coleção</label>
+      <input type="text" id="cardCollection" placeholder="Base Set">
+    </div>
+  `;
+  document.getElementById('modal').classList.add('active');
+}
+
+function openImportCardsModal(collectionName) {
+  currentModal = 'importCards';
+  window.modalCollection = collectionName;
+  document.getElementById('modalTitle').textContent = `Importar cartas em ${collectionName}`;
+  document.getElementById('modalBody').innerHTML = `
+    <p class="text-muted" style="margin-bottom: 1rem;">Cole as cartas (uma por linha). Formato: <strong>Nome Código</strong></p>
+    <div class="form-group">
+      <label>Cartas</label>
+      <textarea id="cardsImport" placeholder="Pikachu 21/124&#10;Charizard 4/102&#10;Venusaur 15/102&#10;Blastoise 2/102" style="height: 200px; font-family: monospace; font-size: 12px;"></textarea>
+    </div>
+    <div id="importPreview"></div>
+  `;
+  document.getElementById('modal').classList.add('active');
+  
+  document.getElementById('cardsImport').addEventListener('input', () => {
+    previewCardsImport();
+  });
+}
+
+function previewCardsImport() {
+  const csv = document.getElementById('cardsImport').value.trim();
+  const preview = document.getElementById('importPreview');
+  
+  if (!csv) {
+    preview.innerHTML = '';
+    return;
+  }
+  
+  const lines = csv.split('\n').filter(line => line.trim());
+  const parsed = lines.map((line, idx) => {
+    if (line.trim()) {
+      return {
+        idx,
+        name: line.trim(),
+        valid: line.trim().length > 0
+      };
+    }
+    return null;
+  }).filter(p => p);
+  
+  preview.innerHTML = `
+    <div style="margin-top: 1rem;">
+      <p class="text-muted" style="margin-bottom: 1rem;"><strong>${parsed.length}</strong> cartas serão importadas:</p>
+      <div class="import-preview">
+        ${parsed.map(p => `
+          <div class="import-preview-item ${p.valid ? '' : 'error'}">
+            <div>${p.name}</div>
+            <span style="color: #4caf50;">✓</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function saveModalData() {
+  if (currentModal === 'card') {
+    const name = document.getElementById('cardName').value.trim();
+    const ano = document.getElementById('cardYear').value.trim();
+    const ilustrador = document.getElementById('cardIllustrator').value.trim();
+    const colecao = document.getElementById('cardCollection').value.trim();
+    
+    if (!name) {
+      alert('Preencha o nome e código da carta');
+      return;
+    }
+    
+    const collections = getCollections();
+    collections[window.modalCollection].cards.push({ name, ano, ilustrador, colecao, collected: false });
+    saveCollections(collections);
+    renderCollections();
+    closeModal();
+  } else if (currentModal === 'importCards') {
+    const csv = document.getElementById('cardsImport').value.trim();
+    if (!csv) {
+      alert('Cole os dados das cartas');
+      return;
+    }
+    
+    const lines = csv.split('\n').filter(line => line.trim());
+    const collections = getCollections();
+    let count = 0;
+    
+    lines.forEach(line => {
+      if (line.trim()) {
+        collections[window.modalCollection].cards.push({
+          name: line.trim(),
+          ano: '',
+          ilustrador: '',
+          colecao: '',
+          collected: false
+        });
+        count++;
+      }
+    });
+    
+    saveCollections(collections);
+    renderCollections();
+    closeModal();
+    alert(`✓ ${count} cartas importadas!\n\nMarca conforme obtém para preencher a barra de progresso.`);
+  } else if (currentModal === 'expense') {
+    const item = document.getElementById('expenseItem').value.trim();
+    const valor = parseFloat(document.getElementById('expenseValue').value) || 0;
+    const dia = document.getElementById('expenseDay').value.trim();
+    const objetivo = document.getElementById('expenseObjective').value.trim();
+    const rara = document.getElementById('expenseRare').value.trim();
+    
+    if (!item || !valor || !dia) {
+      alert('Preencha todos os campos obrigatórios');
+      return;
+    }
+    
+    const budget = getBudget();
+    const mes = document.getElementById('monthSelect').value || new Date().toISOString().slice(0, 7);
+    if (!budget[mes]) budget[mes] = { expenses: [] };
+    budget[mes].expenses.push({ item, valor, dia, objetivo, rara });
+    saveBudget(budget);
+    renderExpenses();
+    filterBudget();
+    closeModal();
+  }
+}
+
+function deleteCard(collectionName, index) {
+  if (!confirm('Deletar esta carta?')) return;
+  const collections = getCollections();
+  collections[collectionName].cards.splice(index, 1);
+  saveCollections(collections);
+  renderCollections();
+}
+
+function deleteCollection(name) {
+  if (!confirm(`Deletar coleção "${name}"?`)) return;
+  const collections = getCollections();
+  delete collections[name];
+  saveCollections(collections);
+  renderCollections();
+}
+
+function toggleCard(collectionName, index) {
+  const collections = getCollections();
+  collections[collectionName].cards[index].collected = !collections[collectionName].cards[index].collected;
+  saveCollections(collections);
+  renderCollections();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+
+// BUDGET
+function getBudget() {
+  return JSON.parse(localStorage.getItem(BUDGET_KEY) || '{}');
+}
+
+function saveBudget(budget) {
+  localStorage.setItem(BUDGET_KEY, JSON.stringify(budget));
+}
+
+function renderExpenses() {
+  const budget = getBudget();
+  const container = document.getElementById('expensesContainer');
+  const mes = document.getElementById('monthSelect').value;
+  const objetivo = document.getElementById('objectiveFilter').value;
+  
+  let expenses = [];
+  if (mes && budget[mes]) {
+    expenses = budget[mes].expenses || [];
+  } else if (!mes) {
+    Object.values(budget).forEach(m => {
+      if (m.expenses) expenses = expenses.concat(m.expenses);
+    });
+  }
+  
+  if (objetivo) {
+    expenses = expenses.filter(e => e.objetivo === objetivo);
+  }
+  
+  container.innerHTML = '';
+  if (expenses.length === 0) {
+    container.innerHTML = '<p class="text-muted">Nenhum gasto registrado</p>';
+    return;
+  }
+  
+  expenses.forEach((exp, idx) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'border: 1px solid #f0f0f0; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start;';
+    item.innerHTML = `
+      <div>
+        <div style="font-weight: 600; margin-bottom: 0.25rem;">${exp.item}</div>
+        <div style="font-size: 12px; color: #999; margin-bottom: 0.5rem;">${exp.dia} • ${exp.objetivo}</div>
+        ${exp.rara ? `<div style="font-size: 12px; color: #f44336; font-weight: 600;">🌟 Rara: ${exp.rara}</div>` : ''}
+      </div>
+      <div style="text-align: right;">
+        <div style="font-weight: 700; font-size: 16px;">R$ ${parseFloat(exp.valor).toFixed(2).replace('.', ',')}</div>
+        <button class="delete-btn" onclick="deleteExpense('${mes}', ${idx})">Deletar</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function filterBudget() {
+  const budget = getBudget();
+  const mes = document.getElementById('monthSelect').value;
+  const objetivo = document.getElementById('objectiveFilter').value;
+  
+  let expenses = [];
+  if (mes && budget[mes]) {
+    expenses = budget[mes].expenses || [];
+  } else if (!mes) {
+    Object.values(budget).forEach(m => {
+      if (m.expenses) expenses = expenses.concat(m.expenses);
+    });
+  }
+  
+  if (objetivo) {
+    expenses = expenses.filter(e => e.objetivo === objetivo);
+  }
+  
+  const total = expenses.reduce((sum, e) => sum + (parseFloat(e.valor) || 0), 0);
+  const raras = expenses.filter(e => e.rara && e.rara.toLowerCase() !== 'não').length;
+  
+  document.getElementById('totalSpent').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+  document.getElementById('purchaseCount').textContent = expenses.length;
+  document.getElementById('rareCount').textContent = raras;
+  
+  renderExpenses();
+}
+
+function openAddExpenseModal() {
+  currentModal = 'expense';
+  document.getElementById('modalTitle').textContent = 'Adicionar gasto';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Item *</label>
+      <input type="text" id="expenseItem" placeholder="Ex: Box Mega Latias EX" autofocus>
+    </div>
+    <div class="two-col">
+      <div class="form-group">
+        <label>Valor (R$) *</label>
+        <input type="number" id="expenseValue" placeholder="117.00" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Dia *</label>
+        <input type="text" id="expenseDay" placeholder="11">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Objetivo</label>
+      <input type="text" id="expenseObjective" placeholder="Ex: Completar coleção 151">
+    </div>
+    <div class="form-group">
+      <label>Veio alguma rara?</label>
+      <input type="text" id="expenseRare" placeholder="Ex: Pikachu Radiante ou não">
+    </div>
+  `;
+  document.getElementById('modal').classList.add('active');
+}
+
+function deleteExpense(mes, idx) {
+  const budget = getBudget();
+  if (budget[mes]) {
+    budget[mes].expenses.splice(idx, 1);
+    saveBudget(budget);
+    filterBudget();
+  }
+}
+
+// LINKS
+function getLinks() {
+  return JSON.parse(localStorage.getItem(LINKS_KEY) || '[]');
+}
+
+function saveLinks(links) {
+  localStorage.setItem(LINKS_KEY, JSON.stringify(links));
+}
+
+function renderLinks() {
+  const links = getLinks();
+  const container = document.getElementById('linksContainer');
+  container.innerHTML = '';
+  
+  if (links.length === 0) {
+    container.innerHTML = '<p class="text-muted">Nenhum link salvo ainda</p>';
+    return;
+  }
+  
+  links.forEach((link, idx) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'border: 1px solid #f0f0f0; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; background: #fafafa;';
+    item.innerHTML = `
+      <a href="${link.url}" target="_blank" style="color: #1a1a1a; font-weight: 600; text-decoration: none; word-break: break-all;">${link.url}</a>
+      <div style="font-size: 12px; color: #999; margin-top: 0.5rem;">${link.desc}</div>
+      <button class="delete-btn" style="margin-top: 0.75rem;" onclick="deleteLink(${idx})">Deletar</button>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function addLink() {
+  const url = document.getElementById('linkUrl').value.trim();
+  const desc = document.getElementById('linkDesc').value.trim();
+  
+  if (!url) {
+    alert('Digite uma URL');
+    return;
+  }
+  
+  const links = getLinks();
+  links.push({ url, desc });
+  saveLinks(links);
+  
+  document.getElementById('linkUrl').value = '';
+  document.getElementById('linkDesc').value = '';
+  renderLinks();
+}
+
+function deleteLink(idx) {
+  const links = getLinks();
+  links.splice(idx, 1);
+  saveLinks(links);
+  renderLinks();
+}
+
+// WISHLIST
+function getWishlist() {
+  return JSON.parse(localStorage.getItem(WISHLIST_KEY) || '[]');
+}
+
+function saveWishlist(wishlist) {
+  localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
+}
+
+function renderWishlist() {
+  const wishlist = getWishlist();
+  const container = document.getElementById('wishlistContainer');
+  container.innerHTML = '';
+  
+  if (wishlist.length === 0) {
+    container.innerHTML = '<p class="text-muted">Sua wishlist está vazia</p>';
+    return;
+  }
+  
+  wishlist.forEach((item, idx) => {
+    const el = document.createElement('div');
+    el.style.cssText = 'border: 1px solid #f0f0f0; padding: 1rem; border-radius: 4px; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: start;';
+    el.innerHTML = `
+      <div>
+        <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 0.25rem;">${item.card}</div>
+        <div style="font-size: 12px; color: #999;">${item.collection} • ${item.type}</div>
+      </div>
+      <button class="delete-btn" onclick="deleteWishlistItem(${idx})">Deletar</button>
+    `;
+    container.appendChild(el);
+  });
+}
+
+function addWishlistItem() {
+  const card = document.getElementById('wishlistCard').value.trim();
+  const collection = document.getElementById('wishlistCollection').value.trim();
+  const type = document.getElementById('wishlistType').value.trim();
+  
+  if (!card) {
+    alert('Digite o nome da carta');
+    return;
+  }
+  
+  const wishlist = getWishlist();
+  wishlist.push({ card, collection, type });
+  saveWishlist(wishlist);
+  
+  document.getElementById('wishlistCard').value = '';
+  document.getElementById('wishlistCollection').value = '';
+  document.getElementById('wishlistType').value = '';
+  renderWishlist();
+}
+
+function deleteWishlistItem(idx) {
+  const wishlist = getWishlist();
+  wishlist.splice(idx, 1);
+  saveWishlist(wishlist);
+  renderWishlist();
+}
+
+// Initialize
+renderCollections();
+</script>
+
+</body>
+</html>
