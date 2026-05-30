@@ -882,7 +882,10 @@ function openCollectionDetail(collectionName) {
       </div>
       
       <div class="collection-detail-info">
-        <h2>${collectionName}</h2>
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+          <h2 style="margin: 0;">${collectionName}</h2>
+          <button class="btn" style="padding: 0.5rem 1rem; font-size: 12px;" onclick="openEditCollectionNameModal('${collectionName}')">✏️ Editar nome</button>
+        </div>
         
         <div class="detail-progress">
           <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
@@ -1092,6 +1095,57 @@ function deleteCollection(collectionName) {
   const collections = getCollections();
   delete collections[collectionName];
   saveCollections(collections);
+  renderCollections();
+}
+
+function openEditCollectionNameModal(collectionName) {
+  currentModal = 'editName';
+  editingCollectionName = collectionName;
+  
+  document.getElementById('modalTitle').textContent = 'Editar nome da coleção';
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Novo nome da coleção</label>
+      <input type="text" id="editedCollectionName" value="${collectionName}" autofocus>
+    </div>
+    
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCollectionName()">Salvar nome</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+  document.getElementById('editedCollectionName').select();
+}
+
+function saveCollectionName() {
+  const newName = document.getElementById('editedCollectionName').value.trim();
+  
+  if (!newName) {
+    alert('Digite um nome para a coleção');
+    return;
+  }
+  
+  const collections = getCollections();
+  
+  if (newName === editingCollectionName) {
+    closeModal();
+    return;
+  }
+  
+  if (collections[newName]) {
+    alert('Já existe uma coleção com este nome');
+    return;
+  }
+  
+  // Renomear
+  collections[newName] = collections[editingCollectionName];
+  delete collections[editingCollectionName];
+  saveCollections(collections);
+  
+  closeModal();
   renderCollections();
 }
 
