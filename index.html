@@ -1622,7 +1622,113 @@ function generateProxysPDF() {
     return;
   }
 
-  alert('📥 Função de PDF será implementada em breve! Por enquanto, use Print (Ctrl+P) para gerar PDF do navegador.');
+  const cardsPerLine = parseInt(document.getElementById('proxysCardsPerLine').value) || 3;
+  
+  // Criar container invisível para o PDF
+  const pdfContainer = document.createElement('div');
+  pdfContainer.style.position = 'absolute';
+  pdfContainer.style.left = '-9999px';
+  pdfContainer.style.width = '210mm';
+  pdfContainer.style.background = 'white';
+  pdfContainer.style.fontFamily = 'Arial, sans-serif';
+  
+  // Calcular dimensões das cartas
+  const pageWidth = 210; // mm
+  const pageHeight = 297; // mm
+  const margin = 5; // mm
+  const cardWidth = (pageWidth - (margin * 2)) / cardsPerLine;
+  const cardHeight = cardWidth * 1.4; // Proporção 3:4
+  const cardsPerPage = Math.floor((pageHeight - (margin * 2)) / cardHeight);
+  
+  // Dividir cartas em páginas
+  const pages = [];
+  for (let i = 0; i < proxysFilteredData.length; i += (cardsPerLine * cardsPerPage)) {
+    pages.push(proxysFilteredData.slice(i, i + (cardsPerLine * cardsPerPage)));
+  }
+  
+  // Criar HTML das páginas
+  let pdfHTML = '';
+  pages.forEach((pageCards, pageIdx) => {
+    pdfHTML += `
+      <div style="width: 210mm; height: 297mm; padding: 5mm; box-sizing: border-box; page-break-after: always; display: grid; grid-template-columns: repeat(${cardsPerLine}, 1fr); gap: 0; grid-auto-rows: ${cardHeight}mm;">
+    `;
+    
+    pageCards.forEach(card => {
+      pdfHTML += `
+        <div style="border: 1px dashed #999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.5mm; box-sizing: border-box; text-align: center; font-size: 11px;">
+          <div style="font-weight: 600; margin-bottom: 0.3mm; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; width: 100%;">
+            ${escapeHtml(card.name || 'Desconhecido')}
+          </div>
+          <div style="color: #666; font-size: 10px;">
+            ${escapeHtml(card.set || '')} #${escapeHtml(card.number || '')}
+          </div>
+        </div>
+      `;
+    });
+    
+    pdfHTML += '</div>';
+  });
+  
+  pdfContainer.innerHTML = pdfHTML;
+  document.body.appendChild(pdfContainer);
+  
+  // Gerar PDF
+  html2canvas(pdfContainer, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff'
+  }).then(canvas => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    let yPosition = 0;
+    let pageHeight = pdf.internal.pageSize.getHeight();
+    
+    // Adicionar imagens ao PDF
+    pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
+    
+    // Se houver múltiplas páginas, adicionar as demais
+    let remainingHeight = imgHeight - pageHeight;
+    while (remainingHeight > 0) {
+      yPosition = -pageHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
+      remainingHeight -= pageHeight;
+    }
+    
+    // Baixar PDF
+    const fileName = `proxies-${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(fileName);
+    
+    // Limpar
+    document.body.removeChild(pdfContainer);
+    
+    alert(`✅ PDF gerado: ${fileName}`);
+  }).catch(err => {
+    document.body.removeChild(pdfContainer);
+    alert('❌ Erro ao gerar PDF: ' + err.message);
+  });
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 function loadCustomJSON() {
@@ -2475,5 +2581,7 @@ migrateDataIfNeeded();
 renderCollections();
 </script>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
