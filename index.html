@@ -884,6 +884,11 @@ function openCollectionDetail(collectionName) {
   const collectedCards = data.cards.filter(c => c.collected).length;
   const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
   
+  // Calcular cor da barra dinamicamente
+  let barColor = '#f44336'; // Vermelho (0-33%)
+  if (progress >= 33) barColor = '#ffb300'; // Amarelo (33-66%)
+  if (progress >= 66) barColor = '#4caf50'; // Verde (66-100%)
+  
   document.getElementById('modalTitle').textContent = `${collectionName}`;
   
   document.getElementById('modalBody').innerHTML = `
