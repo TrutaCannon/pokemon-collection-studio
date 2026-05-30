@@ -486,13 +486,7 @@ h2 {
     <p>Importe listas de cartas, marque múltiplas de uma vez e acompanhe seu progresso em tempo real.</p>
     <div class="cta-group">
       <button class="btn" onclick="switchTab('diary')">Começar agora</button>
-      <button class="btn btn-outline" onclick="alert('Como usar:
-
-1. Crie uma coleção
-2. Importe lista de cartas
-3. Use Marcar Múltiplas
-4. Cole cartas já obtidas
-5. Pronto! Tudo marcado!')">Ver guia</button>
+      <button class="btn btn-outline" onclick="alert('Como usar:\n\n1. Crie uma coleção\n2. Importe lista de cartas\n3. Use Marcar Múltiplas\n4. Cole cartas já obtidas\n5. Pronto! Tudo marcado!')">Ver guia</button>
     </div>
   </section>
 
@@ -841,8 +835,7 @@ function previewCardsImport() {
     return;
   }
   
-  const lines = csv.split('
-').filter(line => line.trim());
+  const lines = csv.split('\n').filter(line => line.trim());
   const parsed = lines.map((line, idx) => {
     if (line.trim()) {
       return {
@@ -882,8 +875,7 @@ function previewMarkMultiple() {
   const collectionName = window.modalCollection;
   const cards = collections[collectionName].cards;
   
-  const lines = csv.split('
-').filter(line => line.trim());
+  const lines = csv.split('\n').filter(line => line.trim());
   const parsed = lines.map(line => {
     const cardName = line.trim().toLowerCase();
     const found = cards.find(c => c.name.toLowerCase() === cardName);
@@ -939,8 +931,7 @@ function saveModalData() {
       return;
     }
     
-    const lines = csv.split('
-').filter(line => line.trim());
+    const lines = csv.split('\n').filter(line => line.trim());
     const collections = getCollections();
     let count = 0;
     
@@ -960,9 +951,7 @@ function saveModalData() {
     saveCollections(collections);
     renderCollections();
     closeModal();
-    alert(`✓ ${count} cartas importadas!
-
-Marca conforme obtém para preencher a barra de progresso.`);
+    alert(`✓ ${count} cartas importadas!\n\nMarca conforme obtém para preencher a barra de progresso.`);
   } else if (currentModal === 'markMultiple') {
     const csv = document.getElementById('cardsToMark').value.trim();
     if (!csv) {
@@ -970,8 +959,7 @@ Marca conforme obtém para preencher a barra de progresso.`);
       return;
     }
     
-    const lines = csv.split('
-').filter(line => line.trim());
+    const lines = csv.split('\n').filter(line => line.trim());
     const collections = getCollections();
     const collectionName = window.modalCollection;
     let marked = 0;
