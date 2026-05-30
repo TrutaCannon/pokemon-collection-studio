@@ -373,8 +373,8 @@ input:focus, select:focus, textarea:focus {
 /* CARDS GALLERY */
 .cards-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.5rem;
   margin-top: 2rem;
 }
 
@@ -907,11 +907,16 @@ function openCollectionDetail(collectionName) {
       
       <div class="cards-gallery" id="cardsGallery">
         ${data.cards.map((card, idx) => `
-          <div class="card-item-gallery ${card.image ? '' : 'no-image'}">
-            ${card.image ? `<img src="${card.image}" alt="${card.name}">` : '🎴'}
-            <div class="card-item-overlay">
-              <button onclick="editCardImage('${collectionName}', ${idx})">Foto</button>
-              <button onclick="removeCard('${collectionName}', ${idx})">Deletar</button>
+          <div style="display: flex; flex-direction: column;">
+            <div class="card-item-gallery ${card.image ? '' : 'no-image'}">
+              ${card.image ? `<img src="${card.image}" alt="${card.name}">` : '🎴'}
+              <div class="card-item-overlay">
+                <button onclick="editCardImage('${collectionName}', ${idx})">Foto</button>
+                <button onclick="removeCard('${collectionName}', ${idx})">Deletar</button>
+              </div>
+            </div>
+            <div style="margin-top: 0.5rem; font-size: 12px; font-weight: 500; color: #1a1a1a; word-break: break-word;">
+              ${card.name}
             </div>
           </div>
         `).join('')}
