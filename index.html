@@ -938,17 +938,17 @@ function openCollectionDetail(collectionName) {
         ${data.cards.map((card, idx) => `
           <div style="display: flex; flex-direction: column; position: relative;">
             <div style="position: absolute; top: 8px; left: 8px; z-index: 10;">
-              <input type="checkbox" ${card.collected ? 'checked' : ''} onchange="toggleCardCollected('${collectionName}', ${idx})" style="width: 20px; height: 20px; cursor: pointer; accent-color: #ffcc00;">
+              <input type="checkbox" ${card.collected ? 'checked' : ''} onchange="toggleCardCollected('${collectionName}', ${idx})" style="width: 20px; height: 20px; cursor: pointer;">
             </div>
             
-            <div class="card-item-gallery ${card.image ? '' : 'no-image'} ${!card.collected ? 'grayscale-card' : ''}" style="filter: ${!card.collected ? 'grayscale(100%)' : 'none'}; opacity: ${!card.collected ? '0.7' : '1'};">
+            <div class="card-item-gallery ${card.image ? '' : 'no-image'}" style="filter: ${!card.collected ? 'grayscale(100%)' : 'none'}; opacity: ${!card.collected ? '0.7' : '1'};">
               ${card.image ? `<img src="${card.image}" alt="${card.name}">` : '🎴'}
               <div class="card-item-overlay">
                 <button onclick="editCardImage('${collectionName}', ${idx})">Foto</button>
                 <button onclick="removeCard('${collectionName}', ${idx})">Deletar</button>
               </div>
             </div>
-            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;" class="card-name-container-${idx}">
+            <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.4rem;" class="card-name-container-${idx}">
               <div id="cardName-${idx}" style="font-size: 12px; font-weight: 500; color: #1a1a1a; word-break: break-word; flex: 1;">
                 ${card.name}
               </div>
