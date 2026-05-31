@@ -1938,37 +1938,60 @@ function debugProxysStorage() {
 function initializeProxysFromDiary() {
   try {
     const storageData = localStorage.getItem('pokemon_collections');
-    console.log('📦 Dados do localStorage:', storageData ? 'Encontrados' : 'Não encontrados');
+    console.log('📦 Dados do localStorage:', storageData ? 'Existe' : 'Não existe');
     
-    const collections = JSON.parse(storageData || '[]');
-    console.log('📚 Coleções carregadas:', collections.length);
+    if (!storageData) {
+      console.warn('⚠️ localStorage vazio');
+      const select = document.getElementById('proxysCollectionSelect');
+      if (select) select.innerHTML = '<option value="">Adicione cartas no Diário!</option>';
+      return;
+    }
+
+    // Parse com validação extra
+    let collections;
+    try {
+      collections = JSON.parse(storageData);
+      console.log('✅ JSON parseado:', typeof collections);
+    } catch (err) {
+      console.error('❌ JSON inválido:', err);
+      collections = [];
+    }
+
+    // Garantir que é array
+    if (!Array.isArray(collections)) {
+      console.warn('⚠️ Não é array, convertendo:', collections);
+      collections = Array.isArray(collections) ? collections : [];
+    }
+
+    console.log('📚 Coleções encontradas:', collections.length);
     
     const select = document.getElementById('proxysCollectionSelect');
     if (!select) {
-      console.error('❌ Elemento select não encontrado');
+      console.error('❌ Select não encontrado');
       return;
     }
     
     if (collections.length === 0) {
-      select.innerHTML = '<option value="">Nenhuma coleção encontrada. Adicione no Diário primeiro!</option>';
-      console.warn('⚠️  Nenhuma coleção no localStorage');
+      select.innerHTML = '<option value="">Nenhuma coleção encontrada</option>';
       return;
     }
 
     select.innerHTML = '<option value="">Escolha uma coleção...</option>';
     
     collections.forEach((collection, idx) => {
-      console.log(`✅ Adicionando: ${collection.name} (${collection.cards ? collection.cards.length : 0} cartas)`);
+      if (!collection || !collection.name) return;
+      const count = collection.cards ? collection.cards.length : 0;
+      console.log(`✅ ${collection.name}: ${count} cartas`);
       
       const option = document.createElement('option');
       option.value = idx;
-      option.textContent = `${collection.name} (${collection.cards ? collection.cards.length : 0} cartas)`;
+      option.textContent = `${collection.name} (${count} cartas)`;
       select.appendChild(option);
     });
     
-    console.log(`✅ ${collections.length} coleção(ções) carregada(s) no dropdown`);
+    console.log('✅ Dropdown preenchido!');
   } catch (error) {
-    console.error('❌ Erro ao carregar coleções:', error);
+    console.error('❌ Erro:', error);
   }
 }
 
