@@ -18,10 +18,10 @@ body {
 
 /* SIDEBAR */
 .sidebar {
-  width: 250px;
+  width: 180px;
   background: #1a1a1a;
   color: white;
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1rem;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
@@ -31,11 +31,11 @@ body {
 .sidebar-logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 20px;
+  gap: 0.5rem;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 3rem;
-  padding: 1rem;
+  margin-bottom: 2rem;
+  padding: 0.75rem;
   background: linear-gradient(135deg, #ffcc00, #ffdd33);
   border-radius: 8px;
   cursor: pointer;
@@ -98,7 +98,7 @@ body {
 /* MAIN CONTENT */
 .main-content {
   flex: 1;
-  margin-left: 250px;
+  margin-left: 180px;
   padding: 2rem;
   height: 100vh;
   overflow-y: auto;
@@ -2708,11 +2708,16 @@ function renderCollections() {
         const collectedCards = colData.cards.filter(c => c.collected).length;
         const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
         
+        // Calcular cor da barra
+        let barColor = '#f44336'; // Vermelho (0-33%)
+        if (progress >= 33) barColor = '#ffb300'; // Amarelo (33-66%)
+        if (progress >= 66) barColor = '#4caf50'; // Verde (66-100%)
+        
         colDiv.innerHTML = `
           <div style="font-weight: 500;">${colName}</div>
-          <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;">${collectedCards} / ${totalCards}</div>
+          <div style="font-size: 0.8rem; color: ${barColor}; font-weight: 600; margin-top: 0.25rem;">${collectedCards} / ${totalCards}</div>
           <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
-            <div style="width: ${progress}%; height: 100%; background: #ffd700;"></div>
+            <div style="width: ${progress}%; height: 100%; background: ${barColor};"></div>
           </div>
         `;
         
@@ -2785,7 +2790,7 @@ function renderCollections() {
         <div class="collection-name">${name}</div>
         
         <div class="collection-progress">
-          <div class="progress-label">
+          <div class="progress-label" style="color: ${barColor} !important;">
             <span>Progresso</span>
             <span>${collectedCards} / ${totalCards}</span>
           </div>
