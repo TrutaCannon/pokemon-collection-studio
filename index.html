@@ -3694,24 +3694,6 @@ function editCollectionCover(collectionName) {
     attachCoverEditorEvents();
   }, 100);
 }
-  
-  // Inicializar variáveis globais
-  window.coverZoom = 1;
-  window.coverOffsetX = 0;
-  window.coverOffsetY = 0;
-  window.coverImageData = null;
-  
-  // Carregar imagem existente se houver
-  if (coverImage) {
-    const img = new Image();
-    img.onload = () => {
-      window.coverImageData = img;
-      renderCoverPreview();
-    };
-    img.src = coverImage;
-  }
-}
-
 
 function renderCoverEditorPreview(imageDataUrl) {
   const canvas = document.getElementById('coverEditorCanvas');
