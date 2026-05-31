@@ -1546,7 +1546,7 @@ function setBlindSize(size) {
 }
 
 function changeBlindZoom(delta) {
-  blinderZoom = Math.max(50, Math.min(200, blinderZoom + delta));
+  blinderZoom = Math.max(50, Math.min(300, blinderZoom + delta));
   document.getElementById('zoomLevel').textContent = blinderZoom + '%';
   
   const grid = document.querySelector('.blinder-modal-grid');
