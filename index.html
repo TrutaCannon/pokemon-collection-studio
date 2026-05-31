@@ -1072,6 +1072,10 @@ input:focus, select:focus, textarea:focus {
       <span style="font-size: 16px;">🎁</span>
       <span>Wishlist</span>
     </button>
+    <button class="nav-item" onclick="switchTab('artistas')">
+      <span style="font-size: 16px;">🎨</span>
+      <span>Ilustradores</span>
+    </button>
     <button class="nav-item" onclick="openBlindModal()">
       <span style="font-size: 16px;">📦</span>
       <span>Blind Box</span>
@@ -1134,6 +1138,17 @@ input:focus, select:focus, textarea:focus {
     </div>
     <!-- Wishlist content will go here -->
     <p class="text-muted">Seção em desenvolvimento...</p>
+  </div>
+
+  <!-- ARTISTAS TAB -->
+  <div id="artistas" class="tab-content">
+    <div class="header">
+      <h1>🎨 Ilustradores</h1>
+      <p>Coleções organizadas por artista</p>
+    </div>
+    <div id="artistasContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
+      <!-- Ilustradores aparecerão aqui -->
+    </div>
   </div>
 
   <!-- PROXYS GENERATOR TAB -->
@@ -1409,6 +1424,9 @@ function switchTab(tab) {
 
   if (tab === 'diary') {
     renderCollections();
+  }
+  if (tab === 'artistas') {
+    renderArtistas();
   }
   if (tab === 'blinder') {
     openBlindModal();
@@ -2490,7 +2508,12 @@ function openCreateCollectionModal() {
   document.getElementById('modalBody').innerHTML = `
     <div class="form-group">
       <label>Nome da coleção *</label>
-      <input type="text" id="newCollectionName" placeholder="Ex: Coleção Tomokazu Komiya" autofocus>
+      <input type="text" id="newCollectionName" placeholder="Ex: Base Set" autofocus>
+    </div>
+    <div class="form-group">
+      <label>Ilustrador (opcional)</label>
+      <input type="text" id="newCollectionArtist" placeholder="Ex: Sachiko Adachi">
+      <small style="color: #999; display: block; margin-top: 0.25rem;">Deixe em branco se não for uma coleção de ilustrador</small>
     </div>
     <div class="modal-buttons">
       <button class="btn" onclick="closeModal()">Cancelar</button>
@@ -2502,6 +2525,8 @@ function openCreateCollectionModal() {
 
 function saveNewCollection() {
   const name = document.getElementById('newCollectionName').value.trim();
+  const artist = document.getElementById('newCollectionArtist').value.trim();
+  
   if (!name) {
     alert('Digite um nome para a coleção');
     return;
@@ -2517,12 +2542,14 @@ function saveNewCollection() {
     cards: [],
     coverImage: null,
     description: '',
+    ilustrador: artist || '',
     createdAt: new Date().toISOString()
   };
   
   saveCollections(collections);
   closeModal();
   renderCollections();
+  renderArtistas();
 }
 
 function renderCollections() {
@@ -2531,6 +2558,11 @@ function renderCollections() {
   container.innerHTML = '';
   
   Object.entries(collections).forEach(([name, data]) => {
+    // Filtrar: mostrar apenas coleções SEM ilustrador
+    if (data.ilustrador && data.ilustrador.trim() !== '') {
+      return;
+    }
+    
     const totalCards = data.cards.length;
     const collectedCards = data.cards.filter(c => c.collected).length;
     const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
@@ -3350,6 +3382,7 @@ function deleteCollection(collectionName) {
   delete collections[collectionName];
   saveCollections(collections);
   renderCollections();
+  renderArtistas();
 }
 
 function editCollectionName(collectionName) {
@@ -3811,6 +3844,114 @@ function deletePDFLibraryItem(idx) {
   const pdfs = getPDFLibrary();
   pdfs.splice(idx, 1);
   savePDFLibrary(pdfs);
+}
+
+// ========== FUNÇÕES PARA ILUSTRADORES ==========
+
+function getUniqueArtistas() {
+  const collections = getCollections();
+  const artistas = new Set();
+  
+  Object.entries(collections).forEach(([name, data]) => {
+    if (data.ilustrador && data.ilustrador.trim() !== '') {
+      artistas.add(data.ilustrador.trim());
+    }
+  });
+  
+  return Array.from(artistas).sort();
+}
+
+function renderArtistas() {
+  const container = document.getElementById('artistasContainer');
+  if (!container) return;
+  
+  const artistas = getUniqueArtistas();
+  
+  if (artistas.length === 0) {
+    container.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center; padding: 2rem;">Nenhuma coleção de ilustrador cadastrada ainda</p>';
+    return;
+  }
+  
+  container.innerHTML = '';
+  artistas.forEach(artista => {
+    const collections = getCollections();
+    const artistaCollections = Object.entries(collections)
+      .filter(([_, data]) => data.ilustrador === artista)
+      .map(([name, _]) => name);
+    
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    card.onmouseover = () => {
+      card.style.transform = 'translateY(-4px)';
+      card.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)';
+    };
+    card.onmouseout = () => {
+      card.style.transform = 'translateY(0)';
+      card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    };
+    card.onclick = () => openArtistModal(artista);
+    
+    card.innerHTML = `
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎨</div>
+      <h3 style="margin: 0.5rem 0; font-size: 1.2rem;">${artista}</h3>
+      <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">${artistaCollections.length} coleção${artistaCollections.length !== 1 ? 's' : ''}</p>
+    `;
+    
+    container.appendChild(card);
+  });
+}
+
+function openArtistModal(artistName) {
+  currentModal = 'artistCollections';
+  document.getElementById('modalTitle').textContent = `🎨 ${artistName}`;
+  
+  const collections = getCollections();
+  const artistaCollections = Object.entries(collections)
+    .filter(([_, data]) => data.ilustrador === artistName);
+  
+  let collectionsHTML = '<div style="display: grid; gap: 1rem;">';
+  
+  artistaCollections.forEach(([name, data]) => {
+    const totalCards = data.cards.length;
+    const collectedCards = data.cards.filter(c => c.collected).length;
+    const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
+    
+    let barColor = '#f44336';
+    if (progress >= 33) barColor = '#ffb300';
+    if (progress >= 66) barColor = '#4caf50';
+    
+    collectionsHTML += `
+      <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s;" 
+           onmouseover="this.style.background='#e8e8e8'" 
+           onmouseout="this.style.background='#f5f5f5'"
+           onclick="openCollectionDetail('${name}')">
+        <h4 style="margin: 0 0 0.5rem 0;">${name}</h4>
+        <p style="margin: 0.25rem 0; font-size: 0.9rem; color: #666;">${collectedCards} / ${totalCards} cartas</p>
+        <div style="width: 100%; height: 6px; background: #ddd; border-radius: 3px; margin-top: 0.5rem; overflow: hidden;">
+          <div style="width: ${progress}%; height: 100%; background: ${barColor}; transition: width 0.3s;"></div>
+        </div>
+      </div>
+    `;
+  });
+  
+  collectionsHTML += '</div>';
+  
+  document.getElementById('modalBody').innerHTML = `
+    ${collectionsHTML}
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Fechar</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
 }
 
 // Carregar biblioteca ao abrir a aba
