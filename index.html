@@ -1380,7 +1380,14 @@ function switchTab(tab) {
     openBlindModal();
   }
   if (tab === 'proxys') {
-    initializeProxysFromDiary();
+    try {
+      console.log('🔧 Inicializando Proxys...');
+      initializeProxysFromDiary();
+      console.log('✅ Proxys inicializado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao inicializar Proxys:', error);
+      alert('❌ Erro ao carregar Gerador de Proxys:\n\n' + error.message);
+    }
   }
 }
 
