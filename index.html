@@ -3696,8 +3696,10 @@ function editCollectionCover(collectionName) {
             color: white;
             position: relative;
             overflow: hidden;
+            cursor: grab;
+            user-select: none;
           ">
-            ${coverImage ? `<img id="previewImage" src="${coverImage}" style="width: 100%; height: 100%; object-fit: cover;">` : '🎴'}
+            ${coverImage ? `<img id="previewImage" src="${coverImage}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.05s;">` : '🎴'}
           </div>
           
           <!-- INFO -->
@@ -3712,7 +3714,9 @@ function editCollectionCover(collectionName) {
           </div>
         </div>
         
-        <div style="font-size: 12px; color: #666; margin-top: 15px;">Clique e arraste a imagem • Scroll para zoom</div>
+        <div style="font-size: 12px; color: #666; margin-top: 15px; font-weight: 500;">
+          🔍 Scroll para zoom • 👆 Arraste para reposicionar
+        </div>
       </div>
       
       <!-- EDITOR CANVAS (INVISÍVEL) -->
@@ -3778,104 +3782,61 @@ function editCollectionCover(collectionName) {
 }
 
 function renderCoverEditorPreview(imageDataUrl) {
-  const canvas = document.getElementById('coverEditorCanvas');
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  const state = window.coverEditorState;
-  
-  // Limpar canvas
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  if (!imageDataUrl) {
-    ctx.fillStyle = '#ddd';
-    ctx.font = '14px Arial';
-    ctx.fillText('Selecione uma imagem', canvas.width / 2 - 70, canvas.height / 2);
-    return;
-  }
-  
-  // Carregar imagem
-  const img = new Image();
-  img.onload = () => {
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.scale(state.zoom, state.zoom);
-    ctx.translate(-canvas.width / 2 + state.offsetX, -canvas.height / 2 + state.offsetY);
-    
-    const imgWidth = img.width;
-    const imgHeight = img.height;
-    const canvasAspect = canvas.width / canvas.height;
-    const imgAspect = imgWidth / imgHeight;
-    
-    let drawWidth, drawHeight, drawX, drawY;
-    
-    if (imgAspect > canvasAspect) {
-      drawHeight = canvas.height;
-      drawWidth = drawHeight * imgAspect;
-      drawX = (canvas.width - drawWidth) / 2;
-      drawY = 0;
-    } else {
-      drawWidth = canvas.width;
-      drawHeight = drawWidth / imgAspect;
-      drawX = 0;
-      drawY = (canvas.height - drawHeight) / 2;
-    }
-    
-    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-    ctx.restore();
-  };
-  img.src = imageDataUrl;
+  // Não usada mais - o preview é atualizado via CSS transforms
 }
 
 function attachCoverEditorEvents() {
-  const canvas = document.getElementById('coverEditorCanvas');
-  const container = document.getElementById('coverEditorContainer');
-  if (!canvas || !container) return;
+  const previewCover = document.getElementById('previewCover');
+  const previewImage = document.getElementById('previewImage');
+  
+  if (!previewCover || !previewImage) return;
   
   const state = window.coverEditorState;
   
+  previewCover.style.cursor = 'grab';
+  
   // Mouse down - iniciar drag
-  canvas.addEventListener('mousedown', (e) => {
+  previewCover.addEventListener('mousedown', (e) => {
+    if (e.target !== previewImage) return; // Só arrastar a imagem
     state.isDragging = true;
     state.lastX = e.clientX;
     state.lastY = e.clientY;
-    container.style.cursor = 'grabbing';
+    previewCover.style.cursor = 'grabbing';
   });
   
   // Mouse move - arrastar
   document.addEventListener('mousemove', (e) => {
-    if (!state.isDragging) return;
+    if (!state.isDragging || !previewImage) return;
     
     const deltaX = e.clientX - state.lastX;
     const deltaY = e.clientY - state.lastY;
     
-    state.offsetX += deltaX * 2;
-    state.offsetY += deltaY * 2;
+    state.offsetX += deltaX;
+    state.offsetY += deltaY;
     state.lastX = e.clientX;
     state.lastY = e.clientY;
     
-    const imageUrl = document.getElementById('coverUploadInput').dataset.imageUrl || 
-                      getCollections()[editingCollectionName].coverImage || '';
-    renderCoverEditorPreview(imageUrl);
+    updatePreviewImageTransform(previewImage);
   });
   
   // Mouse up - parar drag
   document.addEventListener('mouseup', () => {
     state.isDragging = false;
-    container.style.cursor = 'grab';
+    previewCover.style.cursor = 'grab';
   });
   
   // Scroll - zoom
-  canvas.addEventListener('wheel', (e) => {
+  previewCover.addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    state.zoom = Math.max(0.5, Math.min(3, state.zoom * delta));
-    
-    const imageUrl = document.getElementById('coverUploadInput').dataset.imageUrl || 
-                      getCollections()[editingCollectionName].coverImage || '';
-    renderCoverEditorPreview(imageUrl);
+    state.zoom = Math.max(0.8, Math.min(3, state.zoom * delta));
+    updatePreviewImageTransform(previewImage);
   });
+}
+
+function updatePreviewImageTransform(img) {
+  const state = window.coverEditorState;
+  img.style.transform = `scale(${state.zoom}) translate(${state.offsetX / state.zoom}px, ${state.offsetY / state.zoom}px)`;
 }
 
 function loadCoverImageEditor(event) {
