@@ -191,6 +191,10 @@ body {
   opacity: 1 !important;
 }
 
+.collection-card:hover .delete-cover-btn {
+  opacity: 1 !important;
+}
+
 .collection-cover-overlay button {
   padding: 0.75rem 1.5rem;
   background: #ffcc00;
@@ -2748,6 +2752,21 @@ function renderCollections() {
         <button class="edit-cover-btn" onclick="openCoverEditor('${name}')" style="
           position: absolute;
           top: 0.75rem;
+          right: 2.5rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 1.5rem;
+          opacity: 0;
+          transition: opacity 0.2s;
+          z-index: 10;
+          padding: 0.5rem;
+        " title="Editar capa">
+          ✏️
+        </button>
+        <button class="delete-cover-btn" onclick="if(confirm('Deletar coleção &quot;${name}&quot;?')) deleteCollection('${name}')" style="
+          position: absolute;
+          top: 0.75rem;
           right: 0.75rem;
           background: none;
           border: none;
@@ -2757,8 +2776,8 @@ function renderCollections() {
           transition: opacity 0.2s;
           z-index: 10;
           padding: 0.5rem;
-        ">
-          ✏️
+        " title="Deletar coleção">
+          🗑️
         </button>
       </div>
       
@@ -2777,8 +2796,6 @@ function renderCollections() {
         </div>
         
         <div class="collection-actions">
-          <button class="btn" onclick="openCollectionDetail('${name}')">Abrir</button>
-          <button class="btn" onclick="deleteCollection('${name}')">Deletar</button>
         </div>
       </div>
     `;
@@ -3639,19 +3656,70 @@ function editCollectionCover(collectionName) {
   editingCollectionName = collectionName;
   
   const collections = getCollections();
-  const coverImage = collections[collectionName].coverImage || '';
+  const data = collections[collectionName];
+  const coverImage = data.coverImage || '';
+  
+  const totalCards = data.cards.length;
+  const collectedCards = data.cards.filter(c => c.collected).length;
+  const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
+  
+  let barColor = '#f44336';
+  if (progress >= 33) barColor = '#ffb300';
+  if (progress >= 66) barColor = '#4caf50';
   
   document.getElementById('modalTitle').textContent = `Editar capa: ${collectionName}`;
   
   document.getElementById('modalBody').innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-      <!-- PREVIEW GRANDE -->
+      <!-- PREVIEW DO CARD COMO APARECERÁ NA POKÉDEX -->
       <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center;">
-        <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">📐 Preview (proporção 3:4 - 300x400px)</div>
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px;">📱 Preview - Como aparecerá na Pokédex</div>
+        
+        <!-- SIMULAÇÃO DO CARD -->
+        <div style="
+          max-width: 250px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          overflow: hidden;
+        ">
+          <!-- CAPA -->
+          <div id="previewCover" style="
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+          ">
+            ${coverImage ? `<img id="previewImage" src="${coverImage}" style="width: 100%; height: 100%; object-fit: cover;">` : '🎴'}
+          </div>
+          
+          <!-- INFO -->
+          <div style="padding: 1rem;">
+            <div style="font-weight: bold; margin-bottom: 0.5rem; font-size: 14px;">${collectionName}</div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 0.75rem;">
+              <div>${collectedCards} / ${totalCards} cartas</div>
+            </div>
+            <div style="width: 100%; height: 6px; background: #ddd; border-radius: 3px; overflow: hidden;">
+              <div style="width: ${progress}%; height: 100%; background: ${barColor}; transition: width 0.3s;"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="font-size: 12px; color: #666; margin-top: 15px;">Clique e arraste a imagem • Scroll para zoom</div>
+      </div>
+      
+      <!-- EDITOR CANVAS (INVISÍVEL) -->
+      <div style="display: none;">
         <div id="coverEditorContainer" style="
           width: 300px;
           height: 400px;
-          margin: 0 auto;
           background: white;
           border: 2px solid #ddd;
           border-radius: 4px;
@@ -3662,7 +3730,6 @@ function editCollectionCover(collectionName) {
         ">
           <canvas id="coverEditorCanvas" width="300" height="400" style="display: block; width: 100%; height: 100%; cursor: grab;"></canvas>
         </div>
-        <div style="font-size: 12px; color: #666; margin-top: 10px;">Clique e arraste para mover • Scroll para zoom</div>
       </div>
       
       <!-- UPLOAD -->
@@ -3694,6 +3761,14 @@ function editCollectionCover(collectionName) {
     lastY: 0,
     imageLoaded: !!coverImage
   };
+  
+  // Se houver imagem, já renderizar no preview
+  if (coverImage) {
+    const previewImg = document.getElementById('previewImage');
+    if (previewImg) {
+      previewImg.style.transform = `scale(${window.coverEditorState.zoom}) translate(${window.coverEditorState.offsetX}px, ${window.coverEditorState.offsetY}px)`;
+    }
+  }
   
   // Renderizar preview
   setTimeout(() => {
@@ -3817,6 +3892,12 @@ function loadCoverImageEditor(event) {
     window.coverEditorState.offsetX = 0;
     window.coverEditorState.offsetY = 0;
     window.coverEditorState.imageLoaded = true;
+    
+    // Atualizar preview do card
+    const previewCover = document.getElementById('previewCover');
+    if (previewCover) {
+      previewCover.innerHTML = `<img id="previewImage" src="${imageDataUrl}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    }
     
     renderCoverEditorPreview(imageDataUrl);
   };
