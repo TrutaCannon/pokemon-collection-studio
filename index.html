@@ -2050,10 +2050,21 @@ function initializeProxysFromDiary() {
       collections = [];
     }
 
-    // Garantir que é array
+    // Converter OBJETO em ARRAY (porque as coleções são salvas como objeto!)
     if (!Array.isArray(collections)) {
-      console.warn('⚠️ Não é array, convertendo:', collections);
-      collections = Array.isArray(collections) ? collections : [];
+      console.warn('⚠️ Não é array, convertendo objeto para array...');
+      let converted = [];
+      if (typeof collections === 'object' && collections !== null) {
+        Object.entries(collections).forEach(([name, data]) => {
+          converted.push({
+            name: name,
+            cards: data.cards || [],
+            ...data
+          });
+        });
+      }
+      collections = converted;
+      console.log('✅ Convertido para array com', collections.length, 'coleção(ões)');
     }
 
     console.log('📚 Coleções encontradas:', collections.length);
