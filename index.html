@@ -60,7 +60,43 @@ body {
   height: 100vh;
   overflow-y: auto;
   border-right: 1px solid var(--border-color);
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  transition: width 0.3s ease, padding 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  padding: 1.5rem 0.5rem;
+}
+
+.sidebar-toggle {
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0.5rem;
+  transition: transform 0.3s ease;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+  opacity: 1;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+  transform: rotate(180deg);
+}
+
+.sidebar-text {
+  display: inline;
+  transition: display 0.3s ease, opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-text {
+  display: none;
+  opacity: 0;
 }
 
 .sidebar-logo {
@@ -137,6 +173,11 @@ body {
   padding: 2rem;
   height: 100vh;
   overflow-y: auto;
+  transition: margin-left 0.3s ease;
+}
+
+body:has(.sidebar.collapsed) .main-content {
+  margin-left: 80px;
 }
 
 .header {
@@ -1040,6 +1081,10 @@ input:focus, select:focus, textarea:focus {
     padding: 1rem 0.5rem;
   }
 
+  .sidebar.collapsed {
+    width: 60px;
+  }
+
   .sidebar-logo {
     margin-bottom: 2rem;
   }
@@ -1051,6 +1096,10 @@ input:focus, select:focus, textarea:focus {
   .main-content {
     margin-left: 60px;
     padding: 1rem;
+  }
+
+  body:has(.sidebar.collapsed) .main-content {
+    margin-left: 60px;
   }
 
   .collections-grid {
@@ -1217,41 +1266,46 @@ body.dark-mode .theme-toggle {
 <body>
 
 <!-- SIDEBAR -->
-<div class="sidebar">
-  <div class="sidebar-logo" onclick="switchTabHome()" style="cursor: pointer;">
-    <div class="sidebar-logo-icon" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;">
-        <!-- Top half - Red -->
-        <circle cx="50" cy="50" r="45" fill="#E0E0E0" stroke="#333" stroke-width="2"/>
-        <path d="M 5 50 A 45 45 0 0 1 95 50" fill="#EF5350" stroke="#333" stroke-width="2"/>
-        
-        <!-- Bottom half - White -->
-        <path d="M 5 50 A 45 45 0 0 1 95 50" fill="white" stroke="#333" stroke-width="2" transform="rotate(180 50 50)"/>
-        
-        <!-- Center circle -->
-        <circle cx="50" cy="50" r="12" fill="#333" stroke="#333" stroke-width="1"/>
-        <circle cx="50" cy="50" r="8" fill="white" stroke="none"/>
-      </svg>
+<div class="sidebar" id="sidebar">
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+    <div class="sidebar-logo" onclick="switchTabHome()" style="cursor: pointer; flex: 1; margin: 0;">
+      <div class="sidebar-logo-icon" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 32px; height: 32px;">
+          <!-- Top half - Red -->
+          <circle cx="50" cy="50" r="45" fill="#E0E0E0" stroke="#333" stroke-width="2"/>
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="#EF5350" stroke="#333" stroke-width="2"/>
+          
+          <!-- Bottom half - White -->
+          <path d="M 5 50 A 45 45 0 0 1 95 50" fill="white" stroke="#333" stroke-width="2" transform="rotate(180 50 50)"/>
+          
+          <!-- Center circle -->
+          <circle cx="50" cy="50" r="12" fill="#333" stroke="#333" stroke-width="1"/>
+          <circle cx="50" cy="50" r="8" fill="white" stroke="none"/>
+        </svg>
+      </div>
+      <span class="sidebar-text">Collection</span>
     </div>
-    <span>Collection</span>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Recolher/Expandir">
+      ◀
+    </button>
   </div>
 
   <div class="sidebar-nav">
     <button class="nav-item active" onclick="switchTab('diary')">
       <span style="font-size: 16px;">📖</span>
-      <span>Pokédex</span>
+      <span class="sidebar-text">Pokédex</span>
     </button>
     <button class="nav-item" onclick="switchTab('budget')">
       <span style="font-size: 16px;">💎</span>
-      <span>Orçamento</span>
+      <span class="sidebar-text">Orçamento</span>
     </button>
     <button class="nav-item" onclick="openBlindModal()">
       <span style="font-size: 16px;">📦</span>
-      <span>Construtor de Blinder</span>
+      <span class="sidebar-text">Construtor de Blinder</span>
     </button>
     <button class="nav-item" onclick="switchTab('proxys')">
       <span style="font-size: 16px;">🖨️</span>
-      <span>Gerador de Proxys</span>
+      <span class="sidebar-text">Gerador de Proxys</span>
     </button>
   </div>
 </div>
@@ -4435,10 +4489,43 @@ function toggleTheme() {
   applyTheme(isDarkMode ? 'light' : 'dark');
 }
 
+// ============ SIDEBAR COLLAPSE FUNCTIONS ============
+function initSidebar() {
+  const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
+  if (savedState) {
+    collapseSidebar();
+  }
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar.classList.contains('collapsed')) {
+    expandSidebar();
+  } else {
+    collapseSidebar();
+  }
+}
+
+function collapseSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.add('collapsed');
+  localStorage.setItem('sidebarCollapsed', 'true');
+}
+
+function expandSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.classList.remove('collapsed');
+  localStorage.setItem('sidebarCollapsed', 'false');
+}
+
 // Inicializar tema ao carregar a página
-window.addEventListener('DOMContentLoaded', initTheme);
+window.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  initSidebar();
+});
 if (document.readyState === 'interactive' || document.readyState === 'complete') {
   initTheme();
+  initSidebar();
 }
 </script>
 
