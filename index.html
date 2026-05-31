@@ -2774,8 +2774,16 @@ function openCardImageUpload(collectionName, cardIndex) {
   document.getElementById('modalTitle').textContent = `Alterar imagem: ${card.name}`;
   
   document.getElementById('modalBody').innerHTML = `
+    <div style="margin-bottom: 2rem;">
+      <div class="form-group">
+        <label>🔗 Ou cole uma URL da imagem</label>
+        <input type="text" id="cardImageURL" placeholder="https://images.pokemontcg.io/..." value="${card.image_url || ''}" style="width: 100%; padding: 0.75rem;">
+        <small style="display: block; margin-top: 0.5rem; color: #666;">Cole o link direto da imagem (termina em .png, .jpg, etc)</small>
+      </div>
+    </div>
+
     <div class="form-group">
-      <label>Selecione uma imagem</label>
+      <label>Ou selecione uma imagem do seu PC</label>
       <div class="image-upload" onclick="document.getElementById('cardImageInput').click()">
         <input type="file" id="cardImageInput" accept="image/*" onchange="previewCardImageForEdit(event)">
         <p>Clique aqui ou arraste uma imagem</p>
@@ -2812,13 +2820,27 @@ function previewCardImageForEdit(event) {
 }
 
 function saveCardImage() {
-  if (!window.tempCardImage) {
-    alert('Selecione uma imagem');
+  const imageURL = document.getElementById('cardImageURL').value.trim();
+  const hasUploadedImage = window.tempCardImage;
+  
+  if (!imageURL && !hasUploadedImage) {
+    alert('Cole uma URL ou selecione uma imagem');
     return;
   }
   
   const collections = getCollections();
-  collections[editingCollectionName].cards[window.editingCardIndex].image = window.tempCardImage;
+  const card = collections[editingCollectionName].cards[window.editingCardIndex];
+  
+  // Se tem URL, salva como image_url
+  if (imageURL) {
+    card.image_url = imageURL;
+  }
+  
+  // Se tem imagem uploadada, salva como image (base64)
+  if (hasUploadedImage) {
+    card.image = window.tempCardImage;
+  }
+  
   saveCollections(collections);
   
   openCardDetailModal(editingCollectionName, window.editingCardIndex);
