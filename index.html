@@ -1532,6 +1532,15 @@ function renderBlindModalGrid() {
   }
   
   container.appendChild(grid);
+  
+  // Adicionar suporte a Ctrl + Mouse Scroll para zoom
+  container.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -10 : 10;
+      changeBlindZoom(delta);
+    }
+  }, { passive: false });
 }
 
 function setBlindSize(size) {
