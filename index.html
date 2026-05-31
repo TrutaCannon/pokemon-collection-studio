@@ -65,7 +65,7 @@ body {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .nav-item {
@@ -76,13 +76,13 @@ body {
   border: none;
   color: #999;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
   text-align: left;
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
 
 .nav-item:hover {
@@ -1072,25 +1072,13 @@ input:focus, select:focus, textarea:focus {
       <span style="font-size: 16px;">💎</span>
       <span>Orçamento</span>
     </button>
-    <button class="nav-item" onclick="switchTab('links')">
-      <span style="font-size: 16px;">🔗</span>
-      <span>Links</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('wishlist')">
-      <span style="font-size: 16px;">🎁</span>
-      <span>Wishlist</span>
-    </button>
-    <button class="nav-item" onclick="switchTab('artistas')">
-      <span style="font-size: 16px;">🎨</span>
-      <span>Ilustradores</span>
-    </button>
     <button class="nav-item" onclick="openBlindModal()">
       <span style="font-size: 16px;">📦</span>
-      <span>Blind Box</span>
+      <span>Construtor de Blinder</span>
     </button>
     <button class="nav-item" onclick="switchTab('proxys')">
       <span style="font-size: 16px;">🖨️</span>
-      <span>Impressoras</span>
+      <span>Gerador de Proxys</span>
     </button>
   </div>
 </div>
@@ -1129,36 +1117,6 @@ input:focus, select:focus, textarea:focus {
   </div>
 
   <!-- LINKS TAB -->
-  <div id="links" class="tab-content">
-    <div class="header">
-      <h1>🔗 Links</h1>
-      <p>Guarde seus links favoritos de lojas</p>
-    </div>
-    <!-- Links content will go here -->
-    <p class="text-muted">Seção em desenvolvimento...</p>
-  </div>
-
-  <!-- WISHLIST TAB -->
-  <div id="wishlist" class="tab-content">
-    <div class="header">
-      <h1>⭐ Wishlist</h1>
-      <p>Organize as cartas que você quer</p>
-    </div>
-    <!-- Wishlist content will go here -->
-    <p class="text-muted">Seção em desenvolvimento...</p>
-  </div>
-
-  <!-- ARTISTAS TAB -->
-  <div id="artistas" class="tab-content">
-    <div class="header">
-      <h1>🎨 Ilustradores</h1>
-      <p>Coleções organizadas por artista</p>
-    </div>
-    <div id="artistasContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
-      <!-- Ilustradores aparecerão aqui -->
-    </div>
-  </div>
-
   <!-- PROXYS GENERATOR TAB -->
   <div id="proxys" class="tab-content">
     <div class="header">
@@ -1432,9 +1390,6 @@ function switchTab(tab) {
 
   if (tab === 'diary') {
     renderCollections();
-  }
-  if (tab === 'artistas') {
-    renderArtistas();
   }
   if (tab === 'blinder') {
     openBlindModal();
@@ -2557,7 +2512,6 @@ function saveNewCollection() {
   saveCollections(collections);
   closeModal();
   renderCollections();
-  renderArtistas();
 }
 
 function renderCollections() {
@@ -2797,7 +2751,7 @@ function renderCollections() {
           <div class="progress-bar">
             <div class="progress-fill" style="width: ${progress}%; background: ${barColor};"></div>
           </div>
-          <div style="font-size: 11px; color: #999; text-align: right;">${progress.toFixed(0)}%</div>
+          <div style="font-size: 11px; color: ${barColor}; font-weight: 600; text-align: right;">${progress.toFixed(0)}%</div>
         </div>
         
         <div class="collection-actions">
@@ -2876,7 +2830,7 @@ function openCollectionDetail(collectionName) {
           <div class="detail-progress-bar">
             <div class="detail-progress-fill" style="width: ${progress}%; background: ${barColor};"></div>
           </div>
-          <div style="text-align: right; font-size: 12px; color: #666;">${progress.toFixed(0)}% completo</div>
+          <div style="text-align: right; font-size: 12px; color: ${barColor}; font-weight: 600;">${progress.toFixed(0)}% completo</div>
         </div>
         </div>
       </div>
@@ -3583,7 +3537,6 @@ function deleteCollection(collectionName) {
   delete collections[collectionName];
   saveCollections(collections);
   renderCollections();
-  renderArtistas();
 }
 
 function editCollectionName(collectionName) {
