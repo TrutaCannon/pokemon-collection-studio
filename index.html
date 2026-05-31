@@ -1337,9 +1337,9 @@ Venusaur,Base Set,003,https://...
       </div>
     </div>
     <div style="display: flex; gap: 1rem; align-items: center;">
-      <button class="btn" onclick="changeBlindZoom(-10)">🔍−</button>
+      <button id="zoomOutBtn" class="btn">🔍−</button>
       <span id="zoomLevel" style="font-weight: 600; min-width: 60px;">100%</span>
-      <button class="btn" onclick="changeBlindZoom(10)">🔍+</button>
+      <button id="zoomInBtn" class="btn">🔍+</button>
       <button class="btn btn-primary" onclick="saveBlindImage()">💾 Salvar</button>
       <button class="btn" onclick="closeBlindModal()" style="background: #f44336; color: white;">✕ Fechar</button>
     </div>
@@ -1448,10 +1448,45 @@ function switchTabHome() {
 let blinderSize = 3;
 let blinderSlots = [];
 let blinderZoom = 100;
+let zoomInterval = null;
+
+function initializeBlindZoomButtons() {
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  
+  if (!zoomOutBtn || !zoomInBtn) return;
+  
+  // Zoom OUT (−)
+  zoomOutBtn.addEventListener('mousedown', () => {
+    zoomInterval = setInterval(() => changeBlindZoom(-5), 50);
+  });
+  
+  zoomOutBtn.addEventListener('mouseup', () => {
+    if (zoomInterval) clearInterval(zoomInterval);
+  });
+  
+  zoomOutBtn.addEventListener('mouseleave', () => {
+    if (zoomInterval) clearInterval(zoomInterval);
+  });
+  
+  // Zoom IN (+)
+  zoomInBtn.addEventListener('mousedown', () => {
+    zoomInterval = setInterval(() => changeBlindZoom(5), 50);
+  });
+  
+  zoomInBtn.addEventListener('mouseup', () => {
+    if (zoomInterval) clearInterval(zoomInterval);
+  });
+  
+  zoomInBtn.addEventListener('mouseleave', () => {
+    if (zoomInterval) clearInterval(zoomInterval);
+  });
+}
 
 function openBlindModal() {
   document.getElementById('blinderModal').classList.add('active');
   renderBlindModalGrid();
+  initializeBlindZoomButtons();
 }
 
 function closeBlindModal() {
