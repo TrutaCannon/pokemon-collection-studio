@@ -1162,6 +1162,8 @@ input:focus, select:focus, textarea:focus {
           <h2>📔 Usar Cartas do Diário</h2>
           <p style="color: #666; font-size: 14px;">Selecione cartas da sua coleção para gerar proxys</p>
           
+          <button class="btn btn-secondary" onclick="debugProxysStorage()" style="margin-bottom: 1rem; width: 100%; background: #f57c00; color: white; padding: 0.75rem;">🔧 Debug: Verificar localStorage</button>
+          
           <div class="form-group">
             <label>Coleção</label>
             <select id="proxysCollectionSelect" onchange="loadProxysFromDiary()">
@@ -1874,6 +1876,64 @@ function escapeHtml(text) {
 
 // PROXYS FROM DIARY INTEGRATION
 let proxysFromDiaryData = [];
+
+function debugProxysStorage() {
+  console.clear();
+  console.log('🔧 === DEBUG PROXYS STORAGE ===');
+  
+  // 1. Verificar localStorage
+  const storageData = localStorage.getItem('pokemon_collections');
+  console.log('1️⃣ localStorage.getItem("pokemon_collections"):', storageData ? '✅ Encontrado' : '❌ Não encontrado');
+  
+  if (!storageData) {
+    console.error('❌ ERRO: localStorage vazio! Nenhum dado será encontrado.');
+    alert('❌ ERRO: Seu localStorage está vazio!\n\nVocê precisa adicionar uma coleção no 📔 Diário primeiro.');
+    return;
+  }
+  
+  // 2. Parsear dados
+  let collections = [];
+  try {
+    collections = JSON.parse(storageData);
+    console.log('2️⃣ JSON parseado com sucesso:', collections.length, 'coleção(ões)');
+  } catch (error) {
+    console.error('❌ ERRO ao fazer parse do JSON:', error);
+    alert('❌ ERRO ao ler os dados: JSON inválido');
+    return;
+  }
+  
+  // 3. Mostrar detalhes de cada coleção
+  console.log('3️⃣ Detalhes das coleções:');
+  collections.forEach((col, idx) => {
+    console.log(`   [${idx}] ${col.name}: ${col.cards ? col.cards.length : 0} cartas`);
+  });
+  
+  // 4. Verificar elemento select
+  const select = document.getElementById('proxysCollectionSelect');
+  console.log('4️⃣ Elemento select encontrado?', select ? '✅ Sim' : '❌ Não');
+  
+  // 5. Tentar preencher o select manualmente
+  if (select && collections.length > 0) {
+    console.log('5️⃣ Preenchendo select manualmente...');
+    select.innerHTML = '<option value="">Escolha uma coleção...</option>';
+    
+    collections.forEach((collection, idx) => {
+      const option = document.createElement('option');
+      option.value = idx;
+      option.textContent = `${collection.name} (${collection.cards ? collection.cards.length : 0} cartas)`;
+      select.appendChild(option);
+      console.log(`   ✅ Adicionado: ${collection.name}`);
+    });
+    
+    console.log('✅ Select preenchido com sucesso!');
+    alert(`✅ SUCESSO!\n\n${collections.length} coleção(ões) encontrada(s):\n\n${collections.map(c => `• ${c.name} (${c.cards ? c.cards.length : 0} cartas)`).join('\n')}\n\nAgora você pode selecionar no dropdown!`);
+  } else {
+    console.error('❌ Não foi possível preencher o select');
+    alert('❌ Erro: Não foi possível carregar as coleções');
+  }
+  
+  console.log('🔧 === FIM DO DEBUG ===');
+}
 
 function initializeProxysFromDiary() {
   try {
