@@ -1645,6 +1645,11 @@ function migrateDataIfNeeded() {
 }
 
 function switchTab(tab) {
+  // Fechar modal do blinder se está aberto e clicando em outra aba
+  if (tab !== 'blinder') {
+    closeBlindModal();
+  }
+  
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   
