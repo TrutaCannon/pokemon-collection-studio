@@ -62,6 +62,8 @@ body {
   border-right: 1px solid var(--border-color);
   transition: width 0.3s ease, padding 0.3s ease;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.collapsed {
@@ -86,6 +88,28 @@ body {
 }
 
 .sidebar.collapsed .sidebar-toggle {
+  transform: rotate(180deg);
+}
+
+.sidebar-toggle-top {
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0.5rem;
+  transition: transform 0.3s ease;
+  opacity: 0.6;
+  margin-bottom: 1rem;
+  width: 100%;
+  text-align: center;
+}
+
+.sidebar-toggle-top:hover {
+  opacity: 1;
+}
+
+.sidebar.collapsed .sidebar-toggle-top {
   transform: rotate(180deg);
 }
 
@@ -1284,6 +1308,7 @@ body.dark-mode span {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
   z-index: 999;
+  display: none; /* Hidden - using sidebar version instead */
 }
 
 .theme-toggle:hover {
@@ -1298,6 +1323,34 @@ body.dark-mode span {
 body.dark-mode .theme-toggle {
   background: #ffdd33;
   box-shadow: 0 4px 12px rgba(255, 204, 0, 0.3);
+}
+
+.theme-toggle-sidebar {
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0.75rem;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0.6;
+  margin-top: auto;
+  width: 100%;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.theme-toggle-sidebar:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.theme-toggle-sidebar:active {
+  transform: scale(0.95);
+}
+
+body.dark-mode .theme-toggle-sidebar {
+  opacity: 0.7;
 }
 </style>
 </head>
@@ -1323,10 +1376,12 @@ body.dark-mode .theme-toggle {
       </div>
       <span class="sidebar-text">Collection</span>
     </div>
-    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Recolher/Expandir">
-      ◀
-    </button>
   </div>
+  
+  <!-- Toggle button moved above Collection text -->
+  <button class="sidebar-toggle-top" onclick="toggleSidebar()" title="Recolher/Expandir">
+    ◀
+  </button>
 
   <div class="sidebar-nav">
     <button class="nav-item active" onclick="switchTab('diary')">
@@ -1346,6 +1401,9 @@ body.dark-mode .theme-toggle {
       <span class="sidebar-text">Gerador de Proxys</span>
     </button>
   </div>
+  
+  <!-- Theme toggle button at the bottom of sidebar -->
+  <button class="theme-toggle-sidebar" id="themeToggleSidebar" onclick="toggleTheme()" title="Alternar modo escuro">🌙</button>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -4519,14 +4577,17 @@ function initTheme() {
 
 function applyTheme(theme) {
   const themeToggle = document.getElementById('themeToggle');
+  const themeToggleSidebar = document.getElementById('themeToggleSidebar');
   
   if (theme === 'dark') {
     document.body.classList.add('dark-mode');
     if (themeToggle) themeToggle.textContent = '☀️';
+    if (themeToggleSidebar) themeToggleSidebar.textContent = '☀️';
     localStorage.setItem('theme', 'dark');
   } else {
     document.body.classList.remove('dark-mode');
     if (themeToggle) themeToggle.textContent = '🌙';
+    if (themeToggleSidebar) themeToggleSidebar.textContent = '🌙';
     localStorage.setItem('theme', 'light');
   }
 }
