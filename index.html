@@ -654,7 +654,7 @@ input:focus, select:focus, textarea:focus {
 
 .blinder-modal-grid {
   display: grid;
-  gap: 1.2rem;
+  gap: 0.25rem;
   padding: 1.5rem;
   background: white;
   border-radius: 12px;
@@ -701,8 +701,8 @@ input:focus, select:focus, textarea:focus {
 .blinder-modal-slot:hover {
   background: #e8e8e8;
   border-color: #aaa;
-  transform: translateY(-4px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .blinder-modal-slot.dragging {
@@ -714,7 +714,9 @@ input:focus, select:focus, textarea:focus {
 .blinder-modal-slot img {
   width: 100%;
   height: 100%;
-  object-fit: contain; background: white;
+  object-fit: contain;
+  background: white;
+  cursor: grab;
 }
 
 .blinder-modal-slot-overlay {
@@ -723,7 +725,7 @@ input:focus, select:focus, textarea:focus {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -731,6 +733,8 @@ input:focus, select:focus, textarea:focus {
   opacity: 0;
   transition: opacity 0.2s;
   z-index: 5;
+  flex-wrap: wrap;
+  padding: 0.5rem;
 }
 
 .blinder-modal-slot:hover .blinder-modal-slot-overlay {
@@ -738,19 +742,29 @@ input:focus, select:focus, textarea:focus {
 }
 
 .blinder-modal-slot-overlay button {
-  padding: 0.5rem 1rem;
-  background: #ffcc00;
+  padding: 0.4rem 0.8rem;
+  background: #667eea;
+  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .blinder-modal-slot-overlay button:hover {
-  background: #ffd700;
+  background: #5568d3;
   transform: scale(1.05);
+}
+
+.blinder-modal-slot-overlay button.danger {
+  background: #f44336;
+}
+
+.blinder-modal-slot-overlay button.danger:hover {
+  background: #d32f2f;
 }
 
 /* PROXYS GENERATOR */
@@ -1463,14 +1477,54 @@ function renderBlindModalGrid() {
     slot.dataset.slotId = i;
     slot.innerHTML = '🎴';
     
+    // Eventos de drag entre slots
     slot.addEventListener('dragstart', blindDragStart);
     slot.addEventListener('dragover', blindDragOver);
     slot.addEventListener('drop', blindDrop);
     slot.addEventListener('dragend', blindDragEnd);
     
-    slot.addEventListener('contextmenu', (e) => {
+    // Clique para adicionar imagem
+    slot.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') {
+        openBlindSlotImageUpload(i);
+      }
+    });
+    
+    // Drag & drop de arquivos
+    slot.addEventListener('dragover', (e) => {
       e.preventDefault();
-      openBlindSlotImageUpload(i);
+      e.stopPropagation();
+      slot.style.background = '#e0e0ff';
+    });
+    
+    slot.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      slot.style.background = '';
+    });
+    
+    slot.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      slot.style.background = '';
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            blinderSlots[i].image = event.target.result;
+            slot.innerHTML = `
+              <img src="${event.target.result}" alt="Carta">
+              <div class="blinder-modal-slot-overlay">
+                <button onclick="openBlindSlotImageUpload(${i})">✏️ Editar</button>
+                <button class="danger" onclick="removeBlindImage(${i})">🗑️ Remover</button>
+              </div>
+            `;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
     });
     
     grid.appendChild(slot);
@@ -1498,7 +1552,7 @@ function changeBlindZoom(delta) {
   const grid = document.querySelector('.blinder-modal-grid');
   if (grid) {
     const zoomFactor = blinderZoom / 100;
-    grid.style.gap = (1.2 * zoomFactor) + 'rem';
+    grid.style.gap = (0.2 * zoomFactor) + 'rem';
     grid.style.padding = (1.5 * zoomFactor) + 'rem';
     
     // Ajustar tamanho mínimo dos slots
@@ -1604,14 +1658,30 @@ function saveBlindSlotImage() {
     return;
   }
   
-  blinderSlots[window.editingSlotId].image = window.tempBlindImage;
+  const slotId = window.editingSlotId;
+  blinderSlots[slotId].image = window.tempBlindImage;
   
-  const slot = document.querySelector(`[data-slot-id="${window.editingSlotId}"]`);
+  const slot = document.querySelector(`[data-slot-id="${slotId}"]`);
   if (slot) {
-    slot.innerHTML = `<img src="${window.tempBlindImage}" alt="Carta">`;
+    slot.innerHTML = `
+      <img src="${window.tempBlindImage}" alt="Carta">
+      <div class="blinder-modal-slot-overlay">
+        <button onclick="openBlindSlotImageUpload(${slotId})">✏️ Editar</button>
+        <button class="danger" onclick="removeBlindImage(${slotId})">🗑️ Remover</button>
+      </div>
+    `;
   }
   
   closeModal();
+}
+
+function removeBlindImage(slotId) {
+  blinderSlots[slotId].image = null;
+  
+  const slot = document.querySelector(`[data-slot-id="${slotId}"]`);
+  if (slot) {
+    slot.innerHTML = '🎴';
+  }
 }
 
 function saveBlindImage() {
