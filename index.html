@@ -1876,21 +1876,40 @@ function escapeHtml(text) {
 let proxysFromDiaryData = [];
 
 function initializeProxysFromDiary() {
-  const collections = JSON.parse(localStorage.getItem('pokemon_collections') || '[]');
-  const select = document.getElementById('proxysCollectionSelect');
-  
-  if (collections.length === 0) {
-    select.innerHTML = '<option value="">Nenhuma coleção encontrada. Adicione no Diário primeiro!</option>';
-    return;
-  }
+  try {
+    const storageData = localStorage.getItem('pokemon_collections');
+    console.log('📦 Dados do localStorage:', storageData ? 'Encontrados' : 'Não encontrados');
+    
+    const collections = JSON.parse(storageData || '[]');
+    console.log('📚 Coleções carregadas:', collections.length);
+    
+    const select = document.getElementById('proxysCollectionSelect');
+    if (!select) {
+      console.error('❌ Elemento select não encontrado');
+      return;
+    }
+    
+    if (collections.length === 0) {
+      select.innerHTML = '<option value="">Nenhuma coleção encontrada. Adicione no Diário primeiro!</option>';
+      console.warn('⚠️  Nenhuma coleção no localStorage');
+      return;
+    }
 
-  select.innerHTML = '<option value="">Escolha uma coleção...</option>';
-  collections.forEach((collection, idx) => {
-    const option = document.createElement('option');
-    option.value = idx;
-    option.textContent = `${collection.name} (${collection.cards.length} cartas)`;
-    select.appendChild(option);
-  });
+    select.innerHTML = '<option value="">Escolha uma coleção...</option>';
+    
+    collections.forEach((collection, idx) => {
+      console.log(`✅ Adicionando: ${collection.name} (${collection.cards ? collection.cards.length : 0} cartas)`);
+      
+      const option = document.createElement('option');
+      option.value = idx;
+      option.textContent = `${collection.name} (${collection.cards ? collection.cards.length : 0} cartas)`;
+      select.appendChild(option);
+    });
+    
+    console.log(`✅ ${collections.length} coleção(ções) carregada(s) no dropdown`);
+  } catch (error) {
+    console.error('❌ Erro ao carregar coleções:', error);
+  }
 }
 
 function loadProxysFromDiary() {
