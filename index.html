@@ -2557,12 +2557,170 @@ function renderCollections() {
   const container = document.getElementById('collectionsContainer');
   container.innerHTML = '';
   
+  // Separar coleções por tipo
+  const colecoesSoltas = {};
+  const colecoesComIlustrador = {};
+  
   Object.entries(collections).forEach(([name, data]) => {
-    // Filtrar: mostrar apenas coleções SEM ilustrador
     if (data.ilustrador && data.ilustrador.trim() !== '') {
-      return;
+      if (!colecoesComIlustrador[data.ilustrador]) {
+        colecoesComIlustrador[data.ilustrador] = {};
+      }
+      colecoesComIlustrador[data.ilustrador][name] = data;
+    } else {
+      colecoesSoltas[name] = data;
     }
+  });
+  
+  // 1. RENDERIZAR PASTA DE ILUSTRADORES (se houver)
+  if (Object.keys(colecoesComIlustrador).length > 0) {
+    const folderDiv = document.createElement('div');
+    folderDiv.style.cssText = `
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    `;
+    folderDiv.id = 'ilustradoresFolderMain';
     
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      user-select: none;
+    `;
+    header.onclick = (e) => {
+      e.stopPropagation();
+      toggleIlustradoresFolder();
+    };
+    
+    const arrow = document.createElement('span');
+    arrow.id = 'ilustradoresArrow';
+    arrow.style.cssText = `
+      display: inline-block;
+      transition: transform 0.2s;
+      font-size: 1.5rem;
+    `;
+    arrow.textContent = '▼';
+    
+    header.appendChild(arrow);
+    header.appendChild(document.createTextNode('🎨 Ilustradores'));
+    
+    folderDiv.appendChild(header);
+    
+    // Container das coleções de ilustradores
+    const ilustradoresContent = document.createElement('div');
+    ilustradoresContent.id = 'ilustradoresContentMain';
+    ilustradoresContent.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    `;
+    
+    Object.keys(colecoesComIlustrador).sort().forEach(artista => {
+      const artistaDiv = document.createElement('div');
+      artistaDiv.style.cssText = `
+        background: rgba(255,255,255,0.1);
+        padding: 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+      `;
+      artistaDiv.onmouseover = () => {
+        artistaDiv.style.background = 'rgba(255,255,255,0.2)';
+      };
+      artistaDiv.onmouseout = () => {
+        artistaDiv.style.background = 'rgba(255,255,255,0.1)';
+      };
+      artistaDiv.onclick = () => toggleArtistCollections(artista);
+      
+      const artistaHeader = document.createElement('div');
+      artistaHeader.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+      `;
+      
+      const artistaArrow = document.createElement('span');
+      artistaArrow.id = `arrow-${artista}`;
+      artistaArrow.style.cssText = `
+        display: inline-block;
+        transition: transform 0.2s;
+        font-size: 1rem;
+      `;
+      artistaArrow.textContent = '▶';
+      
+      artistaHeader.appendChild(artistaArrow);
+      artistaHeader.appendChild(document.createTextNode(artista));
+      
+      artistaDiv.appendChild(artistaHeader);
+      
+      // Container de coleções do ilustrador
+      const artistaCollectionsDiv = document.createElement('div');
+      artistaCollectionsDiv.id = `collections-${artista}`;
+      artistaCollectionsDiv.style.cssText = `
+        display: none;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255,255,255,0.2);
+      `;
+      
+      Object.entries(colecoesComIlustrador[artista]).forEach(([colName, colData]) => {
+        const colDiv = document.createElement('div');
+        colDiv.style.cssText = `
+          background: rgba(255,255,255,0.05);
+          padding: 0.75rem;
+          border-radius: 6px;
+          margin-bottom: 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 0.9rem;
+        `;
+        colDiv.onmouseover = () => {
+          colDiv.style.background = 'rgba(255,255,255,0.15)';
+        };
+        colDiv.onmouseout = () => {
+          colDiv.style.background = 'rgba(255,255,255,0.05)';
+        };
+        colDiv.onclick = (e) => {
+          e.stopPropagation();
+          openCollectionDetail(colName);
+        };
+        
+        const totalCards = colData.cards.length;
+        const collectedCards = colData.cards.filter(c => c.collected).length;
+        const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
+        
+        colDiv.innerHTML = `
+          <div style="font-weight: 500;">${colName}</div>
+          <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;">${collectedCards} / ${totalCards}</div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+            <div style="width: ${progress}%; height: 100%; background: #ffd700;"></div>
+          </div>
+        `;
+        
+        artistaCollectionsDiv.appendChild(colDiv);
+      });
+      
+      artistaDiv.appendChild(artistaCollectionsDiv);
+      ilustradoresContent.appendChild(artistaDiv);
+    });
+    
+    folderDiv.appendChild(ilustradoresContent);
+    container.appendChild(folderDiv);
+  }
+  
+  // 2. RENDERIZAR COLEÇÕES SOLTAS (como antes)
+  Object.entries(colecoesSoltas).forEach(([name, data]) => {
     const totalCards = data.cards.length;
     const collectedCards = data.cards.filter(c => c.collected).length;
     const progress = totalCards > 0 ? (collectedCards / totalCards) * 100 : 0;
@@ -2576,11 +2734,25 @@ function renderCollections() {
     card.className = 'collection-card';
     
     card.innerHTML = `
-      <div class="collection-cover ${data.coverImage ? '' : 'no-image'}">
+      <div class="collection-cover ${data.coverImage ? '' : 'no-image'}" style="position: relative;">
         ${data.coverImage ? `<img src="${data.coverImage}" alt="${name}">` : getPikachuSVG()}
         <div class="collection-cover-overlay">
           <button onclick="openCollectionDetail('${name}')">Abrir coleção</button>
         </div>
+        <button class="edit-cover-btn" onclick="openCoverEditor('${name}')" style="
+          position: absolute;
+          top: 0.75rem;
+          right: 0.75rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 1.5rem;
+          opacity: 0;
+          transition: opacity 0.2s;
+          z-index: 5;
+        " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
+          ✏️
+        </button>
       </div>
       
       <div class="collection-info">
@@ -3451,6 +3623,10 @@ function saveCollectionDesc() {
   openCollectionDetail(editingCollectionName);
 }
 
+function openCoverEditor(collectionName) {
+  editCollectionCover(collectionName);
+}
+
 function editCollectionCover(collectionName) {
   currentModal = 'editCollectionCover';
   editingCollectionName = collectionName;
@@ -3462,46 +3638,31 @@ function editCollectionCover(collectionName) {
   
   document.getElementById('modalBody').innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-      <!-- PREVIEW -->
+      <!-- PREVIEW GRANDE -->
       <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center;">
-        <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">📐 Preview (proporção 3:4)</div>
-        <div style="width: 200px; height: 270px; margin: 0 auto; background: white; border: 2px solid #ddd; border-radius: 4px; overflow: hidden; position: relative;">
-          <canvas id="coverPreviewCanvas" width="200" height="270" style="display: block; width: 100%; height: 100%;"></canvas>
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">📐 Preview (proporção 3:4 - 300x400px)</div>
+        <div id="coverEditorContainer" style="
+          width: 300px;
+          height: 400px;
+          margin: 0 auto;
+          background: white;
+          border: 2px solid #ddd;
+          border-radius: 4px;
+          overflow: hidden;
+          position: relative;
+          cursor: grab;
+          touch-action: none;
+        ">
+          <canvas id="coverEditorCanvas" width="300" height="400" style="display: block; width: 100%; height: 100%; cursor: grab;"></canvas>
         </div>
-      </div>
-      
-      <!-- CONTROLES -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div>
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">🔍 Zoom</label>
-          <div style="display: flex; gap: 5px;">
-            <button onclick="window.coverZoom = (window.coverZoom || 1) - 0.1; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">−</button>
-            <button onclick="window.coverZoom = (window.coverZoom || 1) + 0.1; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">+</button>
-          </div>
-        </div>
-        
-        <div>
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">↔️ Reposicionar</label>
-          <div style="display: flex; gap: 5px;">
-            <button onclick="window.coverOffsetX = (window.coverOffsetX || 0) - 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">←</button>
-            <button onclick="window.coverOffsetX = (window.coverOffsetX || 0) + 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">→</button>
-          </div>
-        </div>
-        
-        <div style="grid-column: 1/-1;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">↕️ Posição Vertical</label>
-          <div style="display: flex; gap: 5px;">
-            <button onclick="window.coverOffsetY = (window.coverOffsetY || 0) - 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">↑</button>
-            <button onclick="window.coverOffsetY = (window.coverOffsetY || 0) + 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">↓</button>
-          </div>
-        </div>
+        <div style="font-size: 12px; color: #666; margin-top: 10px;">Clique e arraste para mover • Scroll para zoom</div>
       </div>
       
       <!-- UPLOAD -->
       <div>
         <label style="display: block; font-weight: bold; margin-bottom: 10px;">🖼️ Selecionar imagem</label>
         <div class="image-upload" onclick="document.getElementById('coverUploadInput').click()" style="background: #f5f5f5; border: 2px dashed #ccc; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer;">
-          <input type="file" id="coverUploadInput" accept="image/*" onchange="loadCoverImage(event)" style="display: none;">
+          <input type="file" id="coverUploadInput" accept="image/*" onchange="loadCoverImageEditor(event)" style="display: none;">
           <p style="margin: 0; color: #666;">Clique ou arraste uma imagem</p>
         </div>
       </div>
@@ -3509,12 +3670,30 @@ function editCollectionCover(collectionName) {
       <!-- BOTÕES -->
       <div class="modal-buttons">
         <button class="btn" onclick="closeModal()">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveCoverImageWithZoom()">💾 Salvar Capa</button>
+        <button class="btn btn-primary" onclick="saveCoverImageFromEditor()">💾 Salvar Capa</button>
       </div>
     </div>
   `;
   
   document.getElementById('modal').classList.add('active');
+  
+  // Inicializar variáveis de drag and drop
+  window.coverEditorState = {
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0,
+    isDragging: false,
+    lastX: 0,
+    lastY: 0,
+    imageLoaded: !!coverImage
+  };
+  
+  // Renderizar preview
+  setTimeout(() => {
+    renderCoverEditorPreview(coverImage);
+    attachCoverEditorEvents();
+  }, 100);
+}
   
   // Inicializar variáveis globais
   window.coverZoom = 1;
@@ -3533,102 +3712,193 @@ function editCollectionCover(collectionName) {
   }
 }
 
-function loadCoverImage(event) {
+
+function renderCoverEditorPreview(imageDataUrl) {
+  const canvas = document.getElementById('coverEditorCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const state = window.coverEditorState;
+  
+  // Limpar canvas
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  if (!imageDataUrl) {
+    ctx.fillStyle = '#ddd';
+    ctx.font = '14px Arial';
+    ctx.fillText('Selecione uma imagem', canvas.width / 2 - 70, canvas.height / 2);
+    return;
+  }
+  
+  // Carregar imagem
+  const img = new Image();
+  img.onload = () => {
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(state.zoom, state.zoom);
+    ctx.translate(-canvas.width / 2 + state.offsetX, -canvas.height / 2 + state.offsetY);
+    
+    const imgWidth = img.width;
+    const imgHeight = img.height;
+    const canvasAspect = canvas.width / canvas.height;
+    const imgAspect = imgWidth / imgHeight;
+    
+    let drawWidth, drawHeight, drawX, drawY;
+    
+    if (imgAspect > canvasAspect) {
+      drawHeight = canvas.height;
+      drawWidth = drawHeight * imgAspect;
+      drawX = (canvas.width - drawWidth) / 2;
+      drawY = 0;
+    } else {
+      drawWidth = canvas.width;
+      drawHeight = drawWidth / imgAspect;
+      drawX = 0;
+      drawY = (canvas.height - drawHeight) / 2;
+    }
+    
+    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+    ctx.restore();
+  };
+  img.src = imageDataUrl;
+}
+
+function attachCoverEditorEvents() {
+  const canvas = document.getElementById('coverEditorCanvas');
+  const container = document.getElementById('coverEditorContainer');
+  if (!canvas || !container) return;
+  
+  const state = window.coverEditorState;
+  
+  // Mouse down - iniciar drag
+  canvas.addEventListener('mousedown', (e) => {
+    state.isDragging = true;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+    container.style.cursor = 'grabbing';
+  });
+  
+  // Mouse move - arrastar
+  document.addEventListener('mousemove', (e) => {
+    if (!state.isDragging) return;
+    
+    const deltaX = e.clientX - state.lastX;
+    const deltaY = e.clientY - state.lastY;
+    
+    state.offsetX += deltaX * 2;
+    state.offsetY += deltaY * 2;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+    
+    const imageUrl = document.getElementById('coverUploadInput').dataset.imageUrl || 
+                      getCollections()[editingCollectionName].coverImage || '';
+    renderCoverEditorPreview(imageUrl);
+  });
+  
+  // Mouse up - parar drag
+  document.addEventListener('mouseup', () => {
+    state.isDragging = false;
+    container.style.cursor = 'grab';
+  });
+  
+  // Scroll - zoom
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    state.zoom = Math.max(0.5, Math.min(3, state.zoom * delta));
+    
+    const imageUrl = document.getElementById('coverUploadInput').dataset.imageUrl || 
+                      getCollections()[editingCollectionName].coverImage || '';
+    renderCoverEditorPreview(imageUrl);
+  });
+}
+
+function loadCoverImageEditor(event) {
   const file = event.target.files[0];
   if (!file) return;
   
   const reader = new FileReader();
   reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      window.coverImageData = img;
-      window.coverZoom = 1;
-      window.coverOffsetX = 0;
-      window.coverOffsetY = 0;
-      renderCoverPreview();
-    };
-    img.src = e.target.result;
+    const imageDataUrl = e.target.result;
+    document.getElementById('coverUploadInput').dataset.imageUrl = imageDataUrl;
+    
+    // Resetar posição e zoom
+    window.coverEditorState.zoom = 1;
+    window.coverEditorState.offsetX = 0;
+    window.coverEditorState.offsetY = 0;
+    window.coverEditorState.imageLoaded = true;
+    
+    renderCoverEditorPreview(imageDataUrl);
   };
   reader.readAsDataURL(file);
 }
 
-function renderCoverPreview() {
-  const canvas = document.getElementById('coverPreviewCanvas');
-  if (!canvas || !window.coverImageData) return;
-  
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  const img = window.coverImageData;
-  const zoom = window.coverZoom || 1;
-  const offsetX = window.coverOffsetX || 0;
-  const offsetY = window.coverOffsetY || 0;
-  
-  // Calcular tamanho da imagem com zoom
-  let drawWidth = canvas.width * zoom;
-  let drawHeight = canvas.height * zoom;
-  
-  // Manter proporção
-  const imgRatio = img.width / img.height;
-  const canvasRatio = canvas.width / canvas.height;
-  
-  if (imgRatio > canvasRatio) {
-    drawHeight = canvas.height * zoom;
-    drawWidth = drawHeight * imgRatio;
-  } else {
-    drawWidth = canvas.width * zoom;
-    drawHeight = drawWidth / imgRatio;
-  }
-  
-  const x = (canvas.width - drawWidth) / 2 + offsetX;
-  const y = (canvas.height - drawHeight) / 2 + offsetY;
-  
-  ctx.drawImage(img, x, y, drawWidth, drawHeight);
-}
-
-function saveCoverImageWithZoom() {
-  if (!window.coverImageData) {
-    alert('Selecione uma imagem primeiro');
+function saveCoverImageFromEditor() {
+  const canvas = document.getElementById('coverEditorCanvas');
+  if (!canvas) {
+    alert('Erro ao salvar capa');
     return;
   }
   
-  // Criar canvas em ALTA RESOLUÇÃO (4x maior que preview)
-  const previewCanvas = document.getElementById('coverPreviewCanvas');
-  const scale = 4; // 4x a resolução
-  const canvasWidth = 200 * scale; // 800px
-  const canvasHeight = 270 * scale; // 1080px
+  // Salvar em ALTA RESOLUÇÃO (800x1080)
+  const scale = 4;
+  const highResCanvas = document.createElement('canvas');
+  highResCanvas.width = 300 * scale;
+  highResCanvas.height = 400 * scale;
+  const ctx = highResCanvas.getContext('2d');
   
-  const canvas = document.createElement('canvas');
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-  const ctx = canvas.getContext('2d');
+  const state = window.coverEditorState;
+  const imageUrl = document.getElementById('coverUploadInput').dataset.imageUrl || 
+                   getCollections()[editingCollectionName].coverImage || '';
   
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  const img = window.coverImageData;
-  const zoom = window.coverZoom || 1;
-  const offsetX = (window.coverOffsetX || 0) * scale;
-  const offsetY = (window.coverOffsetY || 0) * scale;
-  
-  // Calcular tamanho da imagem com zoom
-  let drawWidth = canvasWidth * zoom;
-  let drawHeight = canvasHeight * zoom;
-  
-  // Manter proporção
-  const imgRatio = img.width / img.height;
-  const canvasRatio = canvasWidth / canvasHeight;
-  
-  if (imgRatio > canvasRatio) {
-    drawHeight = canvasHeight * zoom;
-    drawWidth = drawHeight * imgRatio;
-  } else {
-    drawWidth = canvasWidth * zoom;
-    drawHeight = drawWidth / imgRatio;
+  if (!imageUrl) {
+    alert('Selecione uma imagem');
+    return;
   }
   
-  const x = (canvasWidth - drawWidth) / 2 + offsetX;
+  const img = new Image();
+  img.onload = () => {
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, highResCanvas.width, highResCanvas.height);
+    
+    ctx.save();
+    ctx.translate(highResCanvas.width / 2, highResCanvas.height / 2);
+    ctx.scale(state.zoom, state.zoom);
+    ctx.translate(-highResCanvas.width / 2 + state.offsetX * scale, -highResCanvas.height / 2 + state.offsetY * scale);
+    
+    const imgWidth = img.width;
+    const imgHeight = img.height;
+    const canvasAspect = highResCanvas.width / highResCanvas.height;
+    const imgAspect = imgWidth / imgHeight;
+    
+    let drawWidth, drawHeight, drawX, drawY;
+    
+    if (imgAspect > canvasAspect) {
+      drawHeight = highResCanvas.height;
+      drawWidth = drawHeight * imgAspect;
+      drawX = (highResCanvas.width - drawWidth) / 2;
+      drawY = 0;
+    } else {
+      drawWidth = highResCanvas.width;
+      drawHeight = drawWidth / imgAspect;
+      drawX = 0;
+      drawY = (highResCanvas.height - drawHeight) / 2;
+    }
+    
+    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+    ctx.restore();
+    
+    // Salvar
+    const collections = getCollections();
+    collections[editingCollectionName].coverImage = highResCanvas.toDataURL('image/jpeg', 0.95);
+    saveCollections(collections);
+    
+    closeModal();
+    openCollectionDetail(editingCollectionName);
+  };
+  img.src = imageUrl;
+}
   const y = (canvasHeight - drawHeight) / 2 + offsetY;
   
   ctx.drawImage(img, x, y, drawWidth, drawHeight);
@@ -3859,6 +4129,32 @@ function getUniqueArtistas() {
   });
   
   return Array.from(artistas).sort();
+}
+
+function toggleIlustradoresFolder() {
+  const content = document.getElementById('ilustradoresContentMain');
+  const arrow = document.getElementById('ilustradoresArrow');
+  
+  if (content.style.display === 'none') {
+    content.style.display = 'grid';
+    arrow.style.transform = 'rotate(0deg)';
+  } else {
+    content.style.display = 'none';
+    arrow.style.transform = 'rotate(-90deg)';
+  }
+}
+
+function toggleArtistCollections(artista) {
+  const content = document.getElementById(`collections-${artista}`);
+  const arrow = document.getElementById(`arrow-${artista}`);
+  
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    arrow.style.transform = 'rotate(90deg)';
+  } else {
+    content.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  }
 }
 
 function renderArtistas() {
