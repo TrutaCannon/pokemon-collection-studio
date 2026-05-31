@@ -3523,42 +3523,66 @@ document.getElementById('modal').addEventListener('click', function(event) {
 // ========== PIKACHU SVG SILHOUETTE ==========
 function getPikachuSVG() {
   return `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
-      <!-- Corpo -->
-      <ellipse cx="50" cy="60" rx="28" ry="32" fill="#1a1a1a"/>
-      
-      <!-- Cabeça -->
-      <circle cx="50" cy="25" r="20" fill="#1a1a1a"/>
-      
-      <!-- Orelhas -->
-      <ellipse cx="32" cy="8" rx="8" ry="14" fill="#1a1a1a"/>
-      <ellipse cx="68" cy="8" rx="8" ry="14" fill="#1a1a1a"/>
-      
-      <!-- Pontas das orelhas (amarelo) -->
-      <ellipse cx="32" cy="6" rx="5" ry="8" fill="#FFD700"/>
-      <ellipse cx="68" cy="6" rx="5" ry="8" fill="#FFD700"/>
-      
-      <!-- Olhos -->
-      <circle cx="43" cy="20" r="2.5" fill="white"/>
-      <circle cx="57" cy="20" r="2.5" fill="white"/>
-      
-      <!-- Pupilas -->
-      <circle cx="43.5" cy="21" r="1.2" fill="#1a1a1a"/>
-      <circle cx="57.5" cy="21" r="1.2" fill="#1a1a1a"/>
-      
-      <!-- Bochechas vermelhas -->
-      <circle cx="30" cy="28" r="4" fill="#FF6B6B" opacity="0.7"/>
-      <circle cx="70" cy="28" r="4" fill="#FF6B6B" opacity="0.7"/>
-      
-      <!-- Boca -->
-      <path d="M 50 35 Q 48 37 50 38 Q 52 37 50 35" fill="#1a1a1a"/>
-      
-      <!-- Rabo (ao fundo) -->
-      <path d="M 75 50 Q 85 45 82 65 Q 80 75 75 70" fill="#1a1a1a" stroke="#FFD700" stroke-width="3" stroke-linecap="round"/>
-      
-      <!-- Pés -->
-      <ellipse cx="40" cy="90" rx="6" ry="8" fill="#1a1a1a"/>
-      <ellipse cx="60" cy="90" rx="6" ry="8" fill="#1a1a1a"/>
+    <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+      <g fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        
+        <!-- Corpo -->
+        <ellipse cx="100" cy="130" rx="45" ry="55"/>
+        
+        <!-- Pescoço -->
+        <path d="M 80 80 Q 75 100 80 120"/>
+        <path d="M 120 80 Q 125 100 120 120"/>
+        
+        <!-- Cabeça -->
+        <circle cx="100" cy="50" r="35"/>
+        
+        <!-- Orelha esquerda -->
+        <path d="M 75 20 Q 60 5 65 -5 Q 70 0 72 15"/>
+        
+        <!-- Orelha direita -->
+        <path d="M 125 20 Q 140 5 135 -5 Q 130 0 128 15"/>
+        
+        <!-- Olho esquerdo -->
+        <circle cx="85" cy="42" r="4" fill="#1a1a1a"/>
+        
+        <!-- Olho direito -->
+        <circle cx="115" cy="42" r="4" fill="#1a1a1a"/>
+        
+        <!-- Nariz -->
+        <path d="M 100 52 L 100 58"/>
+        
+        <!-- Boca -->
+        <path d="M 92 62 Q 100 65 108 62"/>
+        
+        <!-- Bolsa esquerda (bochecha) -->
+        <ellipse cx="65" cy="55" rx="10" ry="15"/>
+        
+        <!-- Bolsa direita (bochecha) -->
+        <ellipse cx="135" cy="55" rx="10" ry="15"/>
+        
+        <!-- Braço esquerdo -->
+        <path d="M 70 110 L 50 130 Q 45 140 55 150"/>
+        
+        <!-- Braço direito -->
+        <path d="M 130 110 L 150 130 Q 155 140 145 150"/>
+        
+        <!-- Cauda -->
+        <path d="M 130 170 Q 160 150 170 120 Q 175 105 165 100" stroke-width="3"/>
+        <path d="M 165 100 Q 160 95 168 85"/>
+        
+        <!-- Pé esquerdo -->
+        <ellipse cx="80" cy="180" rx="8" ry="12"/>
+        <path d="M 75 192 L 72 198"/>
+        <path d="M 80 192 L 80 198"/>
+        <path d="M 85 192 L 88 198"/>
+        
+        <!-- Pé direito -->
+        <ellipse cx="120" cy="180" rx="8" ry="12"/>
+        <path d="M 115 192 L 112 198"/>
+        <path d="M 120 192 L 120 198"/>
+        <path d="M 125 192 L 128 198"/>
+        
+      </g>
     </svg>
   `;
 }
