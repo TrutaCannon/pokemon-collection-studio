@@ -1223,9 +1223,43 @@ body.dark-mode .collection-cover-overlay {
   background: rgba(0, 0, 0, 0.7);
 }
 
-body.dark-mode .detail-tab {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
+body.dark-mode #collectionDesc {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .edit-collection-title-btn,
+body.dark-mode .edit-collection-desc-btn {
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode [style*="color: #666"],
+body.dark-mode [style*="color:#666"] {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode [style*="color: #999"],
+body.dark-mode [style*="color:#999"] {
+  color: var(--text-secondary) !important;
+}
+
+body.dark-mode p {
+  color: var(--text-primary);
+}
+
+body.dark-mode small {
+  color: var(--text-secondary);
+}
+
+body.dark-mode label {
+  color: var(--text-primary);
+}
+
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4, body.dark-mode h5, body.dark-mode h6 {
+  color: var(--text-primary);
+}
+
+body.dark-mode span {
+  color: inherit;
 }
 
 /* BOTÃO TOGGLE MODO ESCURO */
