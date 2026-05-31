@@ -3881,20 +3881,6 @@ function saveCoverImageFromEditor() {
   };
   img.src = imageUrl;
 }
-  const y = (canvasHeight - drawHeight) / 2 + offsetY;
-  
-  ctx.drawImage(img, x, y, drawWidth, drawHeight);
-  
-  // Salvar com MÁXIMA QUALIDADE
-  const coverImageData = canvas.toDataURL('image/jpeg', 1.0);
-  
-  const collections = getCollections();
-  collections[editingCollectionName].coverImage = coverImageData;
-  saveCollections(collections);
-  
-  closeModal();
-  openCollectionDetail(editingCollectionName);
-}
 
 function saveCollectionName() {
   const newName = document.getElementById('editedCollectionName').value.trim();
