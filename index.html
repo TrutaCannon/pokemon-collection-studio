@@ -166,7 +166,7 @@ body {
 .collection-cover img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; background: white;
 }
 
 .collection-cover-overlay {
@@ -386,7 +386,7 @@ input:focus, select:focus, textarea:focus {
 .image-preview {
   width: 100%;
   max-height: 300px;
-  object-fit: cover;
+  object-fit: contain; background: white;
   border-radius: 4px;
   margin-top: 1rem;
 }
@@ -423,7 +423,8 @@ input:focus, select:focus, textarea:focus {
 .card-item-gallery img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: white;
 }
 
 .card-item-gallery.no-image {
@@ -492,7 +493,7 @@ input:focus, select:focus, textarea:focus {
 .collection-detail-cover img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; background: white;
 }
 
 .collection-detail-info {
@@ -603,7 +604,7 @@ input:focus, select:focus, textarea:focus {
 .card-list-item-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; background: white;
 }
 
 /* BLINDER FULLSCREEN MODAL */
@@ -713,7 +714,7 @@ input:focus, select:focus, textarea:focus {
 .blinder-modal-slot img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; background: white;
 }
 
 .blinder-modal-slot-overlay {
@@ -875,7 +876,7 @@ input:focus, select:focus, textarea:focus {
 .proxys-card-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; background: white;
 }
 
 .proxys-card-item-overlay {
@@ -1795,7 +1796,7 @@ function generateProxysPDF() {
       
       pageCards.forEach(card => {
         const imageHtml = card.imageData 
-          ? `<img src="${card.imageData}" style="width: 100%; height: 70%; object-fit: cover; border-bottom: 1px solid #999;">`
+          ? `<img src="${card.imageData}" style="width: 100%; height: 70%; object-fit: contain; background: white; border-bottom: 1px solid #999;">`
           : `<div style="width: 100%; height: 70%; background: #f0f0f0; border-bottom: 1px solid #999; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 24px;">🎴</div>`;
 
         pdfHTML += `
@@ -2215,7 +2216,7 @@ function generateProxysPDFWithData(cardsData) {
       
       pageCards.forEach(card => {
         const imageHtml = card.imageData 
-          ? `<img src="${card.imageData}" style="width: 100%; height: 70%; object-fit: cover; border-bottom: 1px solid #999;">`
+          ? `<img src="${card.imageData}" style="width: 100%; height: 70%; object-fit: contain; background: white; border-bottom: 1px solid #999;">`
           : `<div style="width: 100%; height: 70%; background: #f0f0f0; border-bottom: 1px solid #999; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 24px;">🎴</div>`;
 
         pdfHTML += `
@@ -2715,7 +2716,7 @@ function openCardDetailModal(collectionName, cardIndex) {
       <!-- IMAGEM -->
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <div class="card-item-gallery ${card.image ? '' : 'no-image'}" style="width: 100%; height: 400px; margin-bottom: 1rem;">
-          ${card.image ? `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: cover;">` : '🎴'}
+          ${card.image ? `<img src="${card.image}" alt="${card.name}" style="width: 100%; height: 100%; object-fit: contain; background: white;">` : '🎴'}
         </div>
         
         <button class="btn btn-primary" style="width: 100%;" onclick="openCardImageUpload('${collectionName}', ${cardIndex})">📷 Alterar imagem</button>
