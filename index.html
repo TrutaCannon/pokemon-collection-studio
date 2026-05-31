@@ -1125,6 +1125,20 @@ input:focus, select:focus, textarea:focus {
       <p>Crie e baixe PDFs de proxies de cartas para preencher seu fichário</p>
     </div>
 
+    <!-- BIBLIOTECA DE PDFs -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 10px; margin-bottom: 3rem;">
+      <h2 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">📚 Biblioteca de PDFs</h2>
+      <p style="margin-bottom: 1.5rem; opacity: 0.9;">PDFs prontos para baixar - crie seu banco de dados de sets!</p>
+      
+      <button onclick="openAddPDFModal()" style="background: white; color: #667eea; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 1.5rem;">
+        ➕ Adicionar PDF à Biblioteca
+      </button>
+      
+      <div id="pdfLibraryList" style="display: grid; gap: 1rem;">
+        <!-- PDFs aparecerão aqui -->
+      </div>
+    </div>
+
     <!-- HOW IT WORKS SECTION -->
     <div class="proxys-how-section">
       <h2 style="text-align: center; margin-bottom: 2rem;">Como Funciona</h2>
@@ -3376,6 +3390,160 @@ document.getElementById('modal').addEventListener('click', function(event) {
 // Initialize
 migrateDataIfNeeded();
 renderCollections();
+
+// ========== PDF LIBRARY FUNCTIONS ==========
+
+const PDF_LIBRARY_KEY = 'pokemon_pdf_library';
+
+function getPDFLibrary() {
+  const data = localStorage.getItem(PDF_LIBRARY_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+function savePDFLibrary(pdfs) {
+  localStorage.setItem(PDF_LIBRARY_KEY, JSON.stringify(pdfs));
+  renderPDFLibrary();
+}
+
+function renderPDFLibrary() {
+  const pdfs = getPDFLibrary();
+  const container = document.getElementById('pdfLibraryList');
+  
+  if (!container) return;
+  
+  if (pdfs.length === 0) {
+    container.innerHTML = '<p style="color: rgba(255,255,255,0.7); font-style: italic;">Nenhum PDF na biblioteca ainda. Comece adicionando!</p>';
+    return;
+  }
+  
+  container.innerHTML = pdfs.map((pdf, idx) => `
+    <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+      <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
+        <div style="flex: 1;">
+          <div style="font-weight: bold; font-size: 16px; margin-bottom: 0.25rem;">${pdf.name}</div>
+          <div style="font-size: 13px; opacity: 0.9; margin-bottom: 0.75rem;">${pdf.description}</div>
+          <div style="display: flex; gap: 8px;">
+            <a href="${pdf.url}" download style="background: white; color: #667eea; padding: 6px 12px; border-radius: 4px; text-decoration: none; cursor: pointer; font-size: 13px; font-weight: bold;">📥 Baixar</a>
+            <button onclick="editPDFLibraryItem(${idx})" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">✏️ Editar</button>
+            <button onclick="deletePDFLibraryItem(${idx})" style="background: rgba(255,0,0,0.3); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">🗑️ Deletar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddPDFModal() {
+  currentModal = 'addPDF';
+  window.editingPDFIndex = null;
+  
+  document.getElementById('modalTitle').textContent = '➕ Adicionar PDF à Biblioteca';
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Nome do Set *</label>
+      <input type="text" id="pdfName" placeholder="Ex: Scarlet & Violet 01" style="width: 100%; padding: 0.75rem;">
+    </div>
+    
+    <div class="form-group">
+      <label>Descrição</label>
+      <textarea id="pdfDesc" placeholder="Ex: Base set com 102 cartas" style="width: 100%; padding: 0.75rem; height: 80px;"></textarea>
+    </div>
+    
+    <div class="form-group">
+      <label>🔗 URL do PDF *</label>
+      <input type="text" id="pdfUrl" placeholder="https://exemplo.com/arquivo.pdf" style="width: 100%; padding: 0.75rem;">
+      <small style="display: block; margin-top: 0.5rem; color: #666;">Cole o link direto do PDF. Pode estar no GitHub, Google Drive, etc.</small>
+    </div>
+    
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePDFLibraryItem()">Adicionar PDF</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+}
+
+function editPDFLibraryItem(idx) {
+  currentModal = 'editPDF';
+  window.editingPDFIndex = idx;
+  
+  const pdfs = getPDFLibrary();
+  const pdf = pdfs[idx];
+  
+  document.getElementById('modalTitle').textContent = '✏️ Editar PDF';
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Nome do Set *</label>
+      <input type="text" id="pdfName" value="${pdf.name}" style="width: 100%; padding: 0.75rem;">
+    </div>
+    
+    <div class="form-group">
+      <label>Descrição</label>
+      <textarea id="pdfDesc" style="width: 100%; padding: 0.75rem; height: 80px;">${pdf.description}</textarea>
+    </div>
+    
+    <div class="form-group">
+      <label>🔗 URL do PDF *</label>
+      <input type="text" id="pdfUrl" value="${pdf.url}" style="width: 100%; padding: 0.75rem;">
+    </div>
+    
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePDFLibraryItem()">Salvar Alterações</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+}
+
+function savePDFLibraryItem() {
+  const name = document.getElementById('pdfName').value.trim();
+  const desc = document.getElementById('pdfDesc').value.trim();
+  const url = document.getElementById('pdfUrl').value.trim();
+  
+  if (!name || !url) {
+    alert('Preencha o nome e a URL do PDF');
+    return;
+  }
+  
+  const pdfs = getPDFLibrary();
+  const idx = window.editingPDFIndex;
+  
+  if (idx !== null) {
+    // Editar
+    pdfs[idx] = { name, description: desc, url };
+  } else {
+    // Adicionar novo
+    pdfs.push({ name, description: desc, url });
+  }
+  
+  savePDFLibrary(pdfs);
+  closeModal();
+  alert('✅ PDF salvo com sucesso!');
+}
+
+function deletePDFLibraryItem(idx) {
+  if (!confirm('Tem certeza que quer deletar este PDF da biblioteca?')) return;
+  
+  const pdfs = getPDFLibrary();
+  pdfs.splice(idx, 1);
+  savePDFLibrary(pdfs);
+}
+
+// Carregar biblioteca ao abrir a aba
+function loadPDFLibrary() {
+  renderPDFLibrary();
+}
+
+// Inicializar biblioteca na primeira vez
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderPDFLibrary);
+} else {
+  renderPDFLibrary();
+}
 </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
