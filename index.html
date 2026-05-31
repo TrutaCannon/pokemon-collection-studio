@@ -1700,48 +1700,45 @@ function initializeBlindZoomButtons() {
   const zoomOutBtn = document.getElementById('zoomOutBtn');
   const zoomInBtn = document.getElementById('zoomInBtn');
   
-  console.log('🔍 Inicializando botões de zoom...');
-  console.log('zoomOutBtn:', zoomOutBtn);
-  console.log('zoomInBtn:', zoomInBtn);
-  
   if (!zoomOutBtn || !zoomInBtn) {
-    console.error('❌ Botões de zoom não encontrados!');
     return;
   }
   
+  // Remover event listeners antigos para evitar duplicação
+  const newZoomOutBtn = zoomOutBtn.cloneNode(true);
+  const newZoomInBtn = zoomInBtn.cloneNode(true);
+  zoomOutBtn.parentNode.replaceChild(newZoomOutBtn, zoomOutBtn);
+  zoomInBtn.parentNode.replaceChild(newZoomInBtn, zoomInBtn);
+  
+  // Adicionar novos event listeners
+  const zoomOutBtnNew = document.getElementById('zoomOutBtn');
+  const zoomInBtnNew = document.getElementById('zoomInBtn');
+  
   // Zoom OUT (−)
-  zoomOutBtn.addEventListener('mousedown', () => {
-    console.log('🔍− Mousedown');
+  zoomOutBtnNew.addEventListener('mousedown', () => {
     zoomInterval = setInterval(() => changeBlindZoom(-5), 50);
   });
   
-  zoomOutBtn.addEventListener('mouseup', () => {
-    console.log('🔍− Mouseup');
+  zoomOutBtnNew.addEventListener('mouseup', () => {
     if (zoomInterval) clearInterval(zoomInterval);
   });
   
-  zoomOutBtn.addEventListener('mouseleave', () => {
-    console.log('🔍− Mouseleave');
+  zoomOutBtnNew.addEventListener('mouseleave', () => {
     if (zoomInterval) clearInterval(zoomInterval);
   });
   
   // Zoom IN (+)
-  zoomInBtn.addEventListener('mousedown', () => {
-    console.log('🔍+ Mousedown');
+  zoomInBtnNew.addEventListener('mousedown', () => {
     zoomInterval = setInterval(() => changeBlindZoom(5), 50);
   });
   
-  zoomInBtn.addEventListener('mouseup', () => {
-    console.log('🔍+ Mouseup');
+  zoomInBtnNew.addEventListener('mouseup', () => {
     if (zoomInterval) clearInterval(zoomInterval);
   });
   
-  zoomInBtn.addEventListener('mouseleave', () => {
-    console.log('🔍+ Mouseleave');
+  zoomInBtnNew.addEventListener('mouseleave', () => {
     if (zoomInterval) clearInterval(zoomInterval);
   });
-  
-  console.log('✅ Botões de zoom inicializados!');
 }
 
 function openBlindModal() {
@@ -1977,6 +1974,9 @@ function saveBlindSlotImage() {
     `;
   }
   
+  // Forçar recalculação do zoom para sincronizar todos os slots
+  changeBlindZoom(0);
+  
   closeModal();
 }
 
@@ -1987,6 +1987,9 @@ function removeBlindImage(slotId) {
   if (slot) {
     slot.innerHTML = '🎴';
   }
+  
+  // Forçar recalculação do zoom para sincronizar todos os slots
+  changeBlindZoom(0);
 }
 
 function saveBlindImage() {
