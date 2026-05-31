@@ -718,12 +718,14 @@ input:focus, select:focus, textarea:focus {
   background: white;
   border-bottom: 1px solid #e0e0e0;
   padding: 1.5rem 2rem;
+  padding-left: 230px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
   flex-shrink: 0;
+  transition: padding-left 0.3s ease;
 }
 
 .blinder-modal-header h2 {
@@ -4555,12 +4557,24 @@ function collapseSidebar() {
   const sidebar = document.getElementById('sidebar');
   sidebar.classList.add('collapsed');
   localStorage.setItem('sidebarCollapsed', 'true');
+  
+  // Ajustar padding da modal do blinder
+  const blinderHeader = document.querySelector('.blinder-modal-header');
+  if (blinderHeader) {
+    blinderHeader.style.paddingLeft = '130px';
+  }
 }
 
 function expandSidebar() {
   const sidebar = document.getElementById('sidebar');
   sidebar.classList.remove('collapsed');
   localStorage.setItem('sidebarCollapsed', 'false');
+  
+  // Ajustar padding da modal do blinder
+  const blinderHeader = document.querySelector('.blinder-modal-header');
+  if (blinderHeader) {
+    blinderHeader.style.paddingLeft = '230px';
+  }
 }
 
 // Inicializar tema ao carregar a página
