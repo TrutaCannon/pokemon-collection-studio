@@ -3280,8 +3280,48 @@ function saveCoverImage() {
     return;
   }
   
-  const canvas = document.getElementById('coverPreviewCanvas');
-  const coverImageData = canvas.toDataURL('image/jpeg', 0.9);
+  // Criar canvas em ALTA RESOLUÇÃO (4x maior que preview)
+  const previewCanvas = document.getElementById('coverPreviewCanvas');
+  const scale = 4; // 4x a resolução
+  const canvasWidth = 200 * scale; // 800px
+  const canvasHeight = 270 * scale; // 1080px
+  
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+  const ctx = canvas.getContext('2d');
+  
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  const img = window.coverImageData;
+  const zoom = window.coverZoom || 1;
+  const offsetX = (window.coverOffsetX || 0) * scale;
+  const offsetY = (window.coverOffsetY || 0) * scale;
+  
+  // Calcular tamanho da imagem com zoom
+  let drawWidth = canvasWidth * zoom;
+  let drawHeight = canvasHeight * zoom;
+  
+  // Manter proporção
+  const imgRatio = img.width / img.height;
+  const canvasRatio = canvasWidth / canvasHeight;
+  
+  if (imgRatio > canvasRatio) {
+    drawHeight = canvasHeight * zoom;
+    drawWidth = drawHeight * imgRatio;
+  } else {
+    drawWidth = canvasWidth * zoom;
+    drawHeight = drawWidth / imgRatio;
+  }
+  
+  const x = (canvasWidth - drawWidth) / 2 + offsetX;
+  const y = (canvasHeight - drawHeight) / 2 + offsetY;
+  
+  ctx.drawImage(img, x, y, drawWidth, drawHeight);
+  
+  // Salvar com MÁXIMA QUALIDADE
+  const coverImageData = canvas.toDataURL('image/jpeg', 1.0);
   
   const collections = getCollections();
   collections[editingCollectionName].coverImage = coverImageData;
