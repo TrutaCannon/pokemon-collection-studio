@@ -1053,6 +1053,10 @@ input:focus, select:focus, textarea:focus {
       <span style="font-size: 16px;">⭐</span>
       <span>Wishlist</span>
     </button>
+    <button class="nav-item" onclick="switchTab('image-loader')">
+      <span style="font-size: 16px;">🖼️</span>
+      <span>Carregador de Imagens</span>
+    </button>
     <button class="nav-item" onclick="openBlindModal()">
       <span style="font-size: 16px;">🎴</span>
       <span>Construtor de Blinder</span>
@@ -1115,6 +1119,36 @@ input:focus, select:focus, textarea:focus {
     </div>
     <!-- Wishlist content will go here -->
     <p class="text-muted">Seção em desenvolvimento...</p>
+  </div>
+
+  <!-- IMAGE LOADER TAB -->
+  <div id="image-loader" class="tab-content">
+    <div class="header">
+      <h1>🖼️ Carregador de Imagens</h1>
+      <p>Gere URLs de imagens para suas cartas e exporte como CSV</p>
+    </div>
+
+    <!-- Seleção de Coleção -->
+    <div style="background: var(--bg-secondary); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+      <label style="display: block; margin-bottom: 10px; font-weight: bold;">📚 Escolha uma coleção:</label>
+      <select id="imageLoaderCollectionSelect" onchange="loadImageLoaderCards()" style="width: 100%; padding: 10px; font-size: 14px; border-radius: 5px; border: 1px solid var(--border-color);">
+        <option value="">Selecione uma coleção...</option>
+      </select>
+    </div>
+
+    <!-- Cards List with Image URLs -->
+    <div id="imageLoaderCardsArea" style="display: none;">
+      <div style="margin-bottom: 20px;">
+        <button onclick="generateAllImageURLs()" style="background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+          🤖 Gerar URLs para Todas
+        </button>
+        <button onclick="exportImageURLsAsCSV()" style="background: var(--success); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px;">
+          📥 Exportar CSV
+        </button>
+      </div>
+
+      <div id="imageLoaderCardsList" style="display: grid; gap: 15px;"></div>
+    </div>
   </div>
 
   <!-- PROXYS GENERATOR TAB -->
@@ -1378,6 +1412,9 @@ function switchTab(tab) {
   }
   if (tab === 'blinder') {
     openBlindModal();
+  }
+  if (tab === 'image-loader') {
+    loadImageLoaderCollections();
   }
   if (tab === 'proxys') {
     try {
@@ -3138,6 +3175,232 @@ document.getElementById('modal').addEventListener('click', function(event) {
     closeModal();
   }
 });
+
+// ========== IMAGE LOADER FUNCTIONS ==========
+
+function loadImageLoaderCollections() {
+  const storageData = localStorage.getItem('pokemon_collections');
+  let collections = [];
+  
+  if (!storageData) return;
+  
+  const data = JSON.parse(storageData);
+  
+  // Converter objeto para array se necessário
+  if (!Array.isArray(data)) {
+    Object.entries(data).forEach(([name, collData]) => {
+      collections.push({ name, cards: collData.cards || [], ...collData });
+    });
+  } else {
+    collections = data;
+  }
+  
+  const select = document.getElementById('imageLoaderCollectionSelect');
+  select.innerHTML = '<option value="">Selecione uma coleção...</option>';
+  
+  collections.forEach((collection, idx) => {
+    const option = document.createElement('option');
+    option.value = idx;
+    option.textContent = `${collection.name} (${collection.cards ? collection.cards.length : 0} cartas)`;
+    select.appendChild(option);
+  });
+}
+
+function loadImageLoaderCards() {
+  const collectionIdx = parseInt(document.getElementById('imageLoaderCollectionSelect').value);
+  
+  if (isNaN(collectionIdx)) {
+    document.getElementById('imageLoaderCardsArea').style.display = 'none';
+    return;
+  }
+  
+  const storageData = localStorage.getItem('pokemon_collections');
+  if (!storageData) return;
+  
+  const data = JSON.parse(storageData);
+  let collections = [];
+  
+  if (!Array.isArray(data)) {
+    Object.entries(data).forEach(([name, collData]) => {
+      collections.push({ name, cards: collData.cards || [], ...collData });
+    });
+  } else {
+    collections = data;
+  }
+  
+  const collection = collections[collectionIdx];
+  if (!collection) return;
+  
+  const cardsList = document.getElementById('imageLoaderCardsList');
+  cardsList.innerHTML = '';
+  
+  collection.cards.forEach((card, idx) => {
+    const cardHTML = `
+      <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary);">
+        <div style="display: flex; gap: 15px; align-items: flex-start;">
+          <div style="flex: 1;">
+            <div style="font-weight: bold; margin-bottom: 8px;">
+              ${card.name || 'Sem nome'} ${card.code ? '(' + card.code + ')' : ''}
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <input 
+                type="text" 
+                id="imageUrl_${idx}" 
+                placeholder="Cole a URL da imagem aqui..." 
+                value="${card.image_url || ''}"
+                style="flex: 1; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 12px;"
+              />
+              <button onclick="generateImageURLForCard(${collectionIdx}, ${idx})" style="background: var(--primary); color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; white-space: nowrap;">
+                🔍 Buscar
+              </button>
+            </div>
+          </div>
+          ${card.image_url ? '<div style="color: var(--success); font-weight: bold;">✅</div>' : ''}
+        </div>
+      </div>
+    `;
+    cardsList.insertAdjacentHTML('beforeend', cardHTML);
+  });
+  
+  document.getElementById('imageLoaderCardsArea').style.display = 'block';
+}
+
+function generateImageURLForCard(collectionIdx, cardIdx) {
+  const storageData = localStorage.getItem('pokemon_collections');
+  const data = JSON.parse(storageData);
+  let collections = [];
+  
+  if (!Array.isArray(data)) {
+    Object.entries(data).forEach(([name, collData]) => {
+      collections.push({ name, cards: collData.cards || [], ...collData });
+    });
+  } else {
+    collections = data;
+  }
+  
+  const card = collections[collectionIdx].cards[cardIdx];
+  if (!card) return;
+  
+  // Formato: Nome (XXX/YYY)
+  // Extrai o set ID e número da carta
+  let setId = '';
+  let cardNumber = '';
+  
+  if (card.code) {
+    const match = card.code.match(/(\d+)\/(\d+)/);
+    if (match) {
+      cardNumber = match[1];
+      const totalCards = match[2];
+      
+      // Tentar determinar o set ID baseado na coleção
+      const collectionName = collections[collectionIdx].name;
+      console.log(`Buscando imagem para: ${card.name} (${card.code}) - Coleção: ${collectionName}`);
+      
+      // Gerar URL baseado em padrão comum
+      const generatedURL = `https://images.pokemontcg.io/[SET_ID]/${cardNumber}.png`;
+      
+      const input = document.getElementById(`imageUrl_${cardIdx}`);
+      if (input) {
+        input.value = generatedURL;
+        alert(`⚠️ Formato gerado: ${generatedURL}\n\nVocê precisa substituir [SET_ID] pelo ID do set.\n\nExemplo: sv01pt para Scarlet & Violet - Base Set\n\nPeste no campo e valide!`);
+      }
+    }
+  }
+}
+
+function generateAllImageURLs() {
+  const collectionIdx = parseInt(document.getElementById('imageLoaderCollectionSelect').value);
+  if (isNaN(collectionIdx)) return;
+  
+  const storageData = localStorage.getItem('pokemon_collections');
+  const data = JSON.parse(storageData);
+  let collections = [];
+  
+  if (!Array.isArray(data)) {
+    Object.entries(data).forEach(([name, collData]) => {
+      collections.push({ name, cards: collData.cards || [], ...collData });
+    });
+  } else {
+    collections = data;
+  }
+  
+  const collection = collections[collectionIdx];
+  if (!collection || !collection.cards) return;
+  
+  let generated = 0;
+  
+  collection.cards.forEach((card, idx) => {
+    if (!card.code) return;
+    
+    const match = card.code.match(/(\d+)\/(\d+)/);
+    if (!match) return;
+    
+    const cardNumber = match[1];
+    
+    // Padrão genérico - usuário completa o SET_ID
+    const input = document.getElementById(`imageUrl_${idx}`);
+    if (input && !input.value) {
+      input.value = `https://images.pokemontcg.io/[SET_ID]/${cardNumber}.png`;
+      generated++;
+    }
+  });
+  
+  alert(`✅ URLs geradas para ${generated} cartas!\n\n⚠️ Você precisa:\n1. Descobrir o SET_ID para sua coleção\n2. Substituir [SET_ID] pela sigla correta\n\nExemplo: sv01pt, sv02.5pt, etc.`);
+}
+
+function exportImageURLsAsCSV() {
+  const collectionIdx = parseInt(document.getElementById('imageLoaderCollectionSelect').value);
+  if (isNaN(collectionIdx)) {
+    alert('Selecione uma coleção primeiro!');
+    return;
+  }
+  
+  const storageData = localStorage.getItem('pokemon_collections');
+  const data = JSON.parse(storageData);
+  let collections = [];
+  
+  if (!Array.isArray(data)) {
+    Object.entries(data).forEach(([name, collData]) => {
+      collections.push({ name, cards: collData.cards || [], ...collData });
+    });
+  } else {
+    collections = data;
+  }
+  
+  const collection = collections[collectionIdx];
+  if (!collection || !collection.cards) return;
+  
+  // Coletar URLs do formulário
+  let csvContent = 'Nome,Código,ImageURL\n';
+  
+  collection.cards.forEach((card, idx) => {
+    const input = document.getElementById(`imageUrl_${idx}`);
+    const imageUrl = input ? input.value : '';
+    
+    const nome = (card.name || '').replace(/"/g, '""');
+    const codigo = card.code || '';
+    
+    csvContent += `"${nome}","${codigo}","${imageUrl}"\n`;
+  });
+  
+  // Baixar CSV
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${collection.name}-imagens.csv`);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  alert('✅ CSV exportado com sucesso!');
+}
+
+// Initialize image loader
+loadImageLoaderCollections();
 
 // Initialize
 migrateDataIfNeeded();
