@@ -2107,8 +2107,33 @@ function loadProxysFromDiary() {
     return;
   }
 
-  const collections = JSON.parse(localStorage.getItem('pokemon_collections') || '[]');
+  // Obter dados do localStorage
+  const storageData = localStorage.getItem('pokemon_collections');
+  if (!storageData) return;
+  
+  const data = JSON.parse(storageData);
+  
+  // Converter objeto para array (mesma lógica que initializeProxysFromDiary)
+  let collections = [];
+  if (Array.isArray(data)) {
+    collections = data;
+  } else if (typeof data === 'object' && data !== null) {
+    Object.entries(data).forEach(([name, collData]) => {
+      collections.push({
+        name: name,
+        cards: collData.cards || [],
+        ...collData
+      });
+    });
+  }
+  
+  // Pegar a coleção selecionada
   const collection = collections[collectionIdx];
+  
+  if (!collection || !collection.cards) {
+    console.error('❌ Coleção ou cards não encontrados');
+    return;
+  }
   
   proxysFromDiaryData = collection.cards.map(card => ({
     name: card.name,
