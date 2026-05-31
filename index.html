@@ -3209,7 +3209,7 @@ function editCollectionCover(collectionName) {
       <!-- BOTÕES -->
       <div class="modal-buttons">
         <button class="btn" onclick="closeModal()">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveCoverImage()">💾 Salvar Capa</button>
+        <button class="btn btn-primary" onclick="saveCoverImageWithZoom()">💾 Salvar Capa</button>
       </div>
     </div>
   `;
@@ -3287,7 +3287,7 @@ function renderCoverPreview() {
   ctx.drawImage(img, x, y, drawWidth, drawHeight);
 }
 
-function saveCoverImage() {
+function saveCoverImageWithZoom() {
   if (!window.coverImageData) {
     alert('Selecione uma imagem primeiro');
     return;
