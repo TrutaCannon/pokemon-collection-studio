@@ -2454,9 +2454,17 @@ function openCollectionDetail(collectionName) {
   
   document.getElementById('modalBody').innerHTML = `
     <div class="collection-detail-header">
-      <div class="collection-detail-cover ${data.coverImage ? '' : 'no-image'}">
+      <div class="collection-detail-cover ${data.coverImage ? '' : 'no-image'}" style="position: relative;">
         ${data.coverImage ? `<img src="${data.coverImage}" alt="${collectionName}">` : '🎴'}
+        <div class="collection-cover-detail-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; opacity: 0; transition: opacity 0.2s;">
+          <button onclick="editCollectionCover('${collectionName}')" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">📸 Editar Capa</button>
+        </div>
       </div>
+      <style>
+        .collection-detail-cover:hover .collection-cover-detail-overlay {
+          opacity: 1 !important;
+        }
+      </style>
       
       <div class="collection-detail-info">
         <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem;">
@@ -3124,6 +3132,159 @@ function saveCollectionDesc() {
   
   const collections = getCollections();
   collections[editingCollectionName].description = newDesc;
+  saveCollections(collections);
+  
+  closeModal();
+  openCollectionDetail(editingCollectionName);
+}
+
+function editCollectionCover(collectionName) {
+  currentModal = 'editCollectionCover';
+  editingCollectionName = collectionName;
+  
+  const collections = getCollections();
+  const coverImage = collections[collectionName].coverImage || '';
+  
+  document.getElementById('modalTitle').textContent = `Editar capa: ${collectionName}`;
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <!-- PREVIEW -->
+      <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center;">
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">📐 Preview (proporção 3:4)</div>
+        <div style="width: 200px; height: 270px; margin: 0 auto; background: white; border: 2px solid #ddd; border-radius: 4px; overflow: hidden; position: relative;">
+          <canvas id="coverPreviewCanvas" width="200" height="270" style="display: block; width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
+      
+      <!-- CONTROLES -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div>
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">🔍 Zoom</label>
+          <div style="display: flex; gap: 5px;">
+            <button onclick="window.coverZoom = (window.coverZoom || 1) - 0.1; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">−</button>
+            <button onclick="window.coverZoom = (window.coverZoom || 1) + 0.1; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">+</button>
+          </div>
+        </div>
+        
+        <div>
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">↔️ Reposicionar</label>
+          <div style="display: flex; gap: 5px;">
+            <button onclick="window.coverOffsetX = (window.coverOffsetX || 0) - 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">←</button>
+            <button onclick="window.coverOffsetX = (window.coverOffsetX || 0) + 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">→</button>
+          </div>
+        </div>
+        
+        <div style="grid-column: 1/-1;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">↕️ Posição Vertical</label>
+          <div style="display: flex; gap: 5px;">
+            <button onclick="window.coverOffsetY = (window.coverOffsetY || 0) - 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">↑</button>
+            <button onclick="window.coverOffsetY = (window.coverOffsetY || 0) + 10; renderCoverPreview()" style="flex: 1; padding: 8px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">↓</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- UPLOAD -->
+      <div>
+        <label style="display: block; font-weight: bold; margin-bottom: 10px;">🖼️ Selecionar imagem</label>
+        <div class="image-upload" onclick="document.getElementById('coverUploadInput').click()" style="background: #f5f5f5; border: 2px dashed #ccc; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer;">
+          <input type="file" id="coverUploadInput" accept="image/*" onchange="loadCoverImage(event)" style="display: none;">
+          <p style="margin: 0; color: #666;">Clique ou arraste uma imagem</p>
+        </div>
+      </div>
+      
+      <!-- BOTÕES -->
+      <div class="modal-buttons">
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveCoverImage()">💾 Salvar Capa</button>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+  
+  // Inicializar variáveis globais
+  window.coverZoom = 1;
+  window.coverOffsetX = 0;
+  window.coverOffsetY = 0;
+  window.coverImageData = null;
+  
+  // Carregar imagem existente se houver
+  if (coverImage) {
+    const img = new Image();
+    img.onload = () => {
+      window.coverImageData = img;
+      renderCoverPreview();
+    };
+    img.src = coverImage;
+  }
+}
+
+function loadCoverImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      window.coverImageData = img;
+      window.coverZoom = 1;
+      window.coverOffsetX = 0;
+      window.coverOffsetY = 0;
+      renderCoverPreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderCoverPreview() {
+  const canvas = document.getElementById('coverPreviewCanvas');
+  if (!canvas || !window.coverImageData) return;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  const img = window.coverImageData;
+  const zoom = window.coverZoom || 1;
+  const offsetX = window.coverOffsetX || 0;
+  const offsetY = window.coverOffsetY || 0;
+  
+  // Calcular tamanho da imagem com zoom
+  let drawWidth = canvas.width * zoom;
+  let drawHeight = canvas.height * zoom;
+  
+  // Manter proporção
+  const imgRatio = img.width / img.height;
+  const canvasRatio = canvas.width / canvas.height;
+  
+  if (imgRatio > canvasRatio) {
+    drawHeight = canvas.height * zoom;
+    drawWidth = drawHeight * imgRatio;
+  } else {
+    drawWidth = canvas.width * zoom;
+    drawHeight = drawWidth / imgRatio;
+  }
+  
+  const x = (canvas.width - drawWidth) / 2 + offsetX;
+  const y = (canvas.height - drawHeight) / 2 + offsetY;
+  
+  ctx.drawImage(img, x, y, drawWidth, drawHeight);
+}
+
+function saveCoverImage() {
+  if (!window.coverImageData) {
+    alert('Selecione uma imagem primeiro');
+    return;
+  }
+  
+  const canvas = document.getElementById('coverPreviewCanvas');
+  const coverImageData = canvas.toDataURL('image/jpeg', 0.9);
+  
+  const collections = getCollections();
+  collections[editingCollectionName].coverImage = coverImageData;
   saveCollections(collections);
   
   closeModal();
