@@ -1162,7 +1162,7 @@ input:focus, select:focus, textarea:focus {
           <h2>📔 Usar Cartas do Diário</h2>
           <p style="color: #666; font-size: 14px;">Selecione cartas da sua coleção para gerar proxys</p>
           
-          <button class="btn btn-secondary" onclick="debugProxysStorage()" style="margin-bottom: 1rem; width: 100%; background: #f57c00; color: white; padding: 0.75rem;">🔧 Debug: Verificar localStorage</button>
+          <button class="btn btn-secondary" onclick="debugCompleteStorage()" style="margin-bottom: 1rem; width: 100%; background: #f57c00; color: white; padding: 0.75rem;">🔧 Debug Completo: Analisar localStorage</button>
           
           <div class="form-group">
             <label>Coleção</label>
@@ -1877,7 +1877,75 @@ function escapeHtml(text) {
 // PROXYS FROM DIARY INTEGRATION
 let proxysFromDiaryData = [];
 
-function debugProxysStorage() {
+function debugCompleteStorage() {
+  console.clear();
+  console.log('🔍 === DIAGNÓSTICO COMPLETO DO localStorage ===\n');
+  
+  // 1. Listar TODAS as chaves
+  console.log('📋 TODAS AS CHAVES DO localStorage:');
+  console.log(`Total de chaves: ${localStorage.length}\n`);
+  
+  let foundPokemon = false;
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    const value = localStorage.getItem(key);
+    const size = value ? value.length : 0;
+    
+    console.log(`[${i}] "${key}" (${size} bytes)`);
+    
+    if (key.toLowerCase().includes('pokemon') || key.toLowerCase().includes('collection')) {
+      foundPokemon = true;
+      console.log(`   ↳ Primeiros 200 caracteres: ${value.substring(0, 200)}`);
+    }
+  }
+  
+  console.log('\n---\n');
+  
+  // 2. Procurar especificamente por 'pokemon_collections'
+  console.log('🎯 PROCURANDO "pokemon_collections":');
+  const data = localStorage.getItem('pokemon_collections');
+  
+  if (data) {
+    console.log('✅ ENCONTRADO!\n');
+    console.log('Tamanho:', data.length, 'bytes');
+    console.log('Primeiros 500 caracteres:');
+    console.log(data.substring(0, 500));
+    
+    // Tentar fazer parse
+    try {
+      const parsed = JSON.parse(data);
+      console.log('\n✅ JSON válido!');
+      console.log('Tipo:', Array.isArray(parsed) ? 'Array' : typeof parsed);
+      console.log('Conteúdo:', parsed);
+    } catch (e) {
+      console.error('❌ JSON inválido:', e.message);
+    }
+  } else {
+    console.error('❌ NÃO ENCONTRADO NO localStorage!');
+    console.error('⚠️ POSSÍVEIS PROBLEMAS:');
+    console.error('  1. Os dados nunca foram salvos');
+    console.error('  2. O localStorage foi limpo');
+    console.error('  3. A função saveCollections() não está funcionando');
+  }
+  
+  // 3. Resumo
+  console.log('\n---\n');
+  console.log('📊 RESUMO:');
+  console.log(`- localStorage tem ${localStorage.length} chave(s)`);
+  console.log(`- "pokemon_collections" existe? ${data ? 'SIM ✅' : 'NÃO ❌'}`);
+  console.log(`- Chaves relacionadas a Pokemon encontradas? ${foundPokemon ? 'SIM' : 'NÃO'}`);
+  
+  console.log('\n🔍 === FIM DO DIAGNÓSTICO ===\n');
+  
+  // Mostrar alert com resultado
+  if (data) {
+    alert(`✅ ENCONTRADO NO localStorage!\n\nTamanho: ${data.length} bytes\n\nVer console (F12) para detalhes completos.`);
+  } else {
+    alert(`❌ NÃO ENCONTRADO NO localStorage!\n\nSua coleção não foi salva.\n\n⚠️ SOLUÇÃO:\n1. Vá para 📔 Diário\n2. Adicione uma coleção\n3. Volte aqui e clique no debug de novo`);
+  }
+}
+
   console.clear();
   console.log('🔧 === DEBUG PROXYS STORAGE ===');
   
