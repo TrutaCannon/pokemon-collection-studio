@@ -2676,6 +2676,8 @@ function openCollectionDetail(collectionName) {
     </div>
     
     <div class="modal-buttons">
+      <button class="btn" onclick="openAddCardModal('${collectionName}')">➕ Adicionar carta</button>
+      <button class="btn" onclick="openAddCardsFromListModal('${collectionName}')">📋 Adicionar via lista</button>
       <button class="btn" onclick="closeModal()">Fechar</button>
     </div>
   `;
@@ -3031,6 +3033,138 @@ function toggleCardCollected(collectionName, cardIndex) {
   const collections = getCollections();
   collections[collectionName].cards[cardIndex].collected = !collections[collectionName].cards[cardIndex].collected;
   saveCollections(collections);
+  openCollectionDetail(collectionName);
+}
+
+// ========== ADICIONAR CARTAS ==========
+
+function openAddCardModal(collectionName) {
+  currentModal = 'addCard';
+  editingCollectionName = collectionName;
+  
+  document.getElementById('modalTitle').textContent = 'Adicionar Nova Carta';
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group">
+      <label>Nome da Carta *</label>
+      <input type="text" id="newCardName" placeholder="ex: Pikachu" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+    </div>
+    
+    <div class="form-group">
+      <label>Ano</label>
+      <input type="text" id="newCardYear" placeholder="ex: 2020" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+    </div>
+    
+    <div class="form-group">
+      <label>Coleção</label>
+      <input type="text" id="newCardSet" placeholder="ex: Base Set" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+    </div>
+    
+    <div class="form-group">
+      <label>URL da Imagem (opcional)</label>
+      <input type="text" id="newCardImageURL" placeholder="https://..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+    </div>
+    
+    <div class="form-group">
+      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+        <input type="checkbox" id="newCardCollected">
+        <span>Marcar como coletada</span>
+      </label>
+    </div>
+    
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNewCard('${collectionName}')">Adicionar Carta</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+  setTimeout(() => document.getElementById('newCardName').focus(), 100);
+}
+
+function saveNewCard(collectionName) {
+  const name = document.getElementById('newCardName').value.trim();
+  
+  if (!name) {
+    alert('O nome da carta é obrigatório');
+    return;
+  }
+  
+  const collections = getCollections();
+  const newCard = {
+    name: name,
+    ano: document.getElementById('newCardYear').value.trim(),
+    colecao: document.getElementById('newCardSet').value.trim(),
+    image_url: document.getElementById('newCardImageURL').value.trim(),
+    collected: document.getElementById('newCardCollected').checked
+  };
+  
+  collections[collectionName].cards.push(newCard);
+  saveCollections(collections);
+  closeModal();
+  openCollectionDetail(collectionName);
+}
+
+function openAddCardsFromListModal(collectionName) {
+  currentModal = 'addCardsList';
+  editingCollectionName = collectionName;
+  
+  document.getElementById('modalTitle').textContent = 'Adicionar Cartas via Lista';
+  
+  document.getElementById('modalBody').innerHTML = `
+    <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">Adicione uma carta por linha. Formato: <code>Nome | Ano | Coleção | URL_da_imagem</code></p>
+    <p style="color: #999; margin-bottom: 1rem; font-size: 12px;">Os campos após o nome são opcionais. Use | para separar.</p>
+    
+    <textarea id="cardsListInput" placeholder="Pikachu | 2020 | Base Set | https://...&#10;Charizard | 2021 | Jungle&#10;Blastoise&#10;&#10;..." style="width: 100%; height: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
+    
+    <div class="modal-buttons">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCardsFromList('${collectionName}')">Adicionar Cartas</button>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
+  setTimeout(() => document.getElementById('cardsListInput').focus(), 100);
+}
+
+function saveCardsFromList(collectionName) {
+  const input = document.getElementById('cardsListInput').value.trim();
+  
+  if (!input) {
+    alert('Digite pelo menos uma carta');
+    return;
+  }
+  
+  const collections = getCollections();
+  const lines = input.split('\n').filter(line => line.trim());
+  let addedCount = 0;
+  
+  lines.forEach(line => {
+    const parts = line.split('|').map(p => p.trim());
+    const name = parts[0];
+    
+    if (!name) return;
+    
+    const newCard = {
+      name: name,
+      ano: parts[1] || '',
+      colecao: parts[2] || '',
+      image_url: parts[3] || '',
+      collected: false
+    };
+    
+    collections[collectionName].cards.push(newCard);
+    addedCount++;
+  });
+  
+  if (addedCount === 0) {
+    alert('Nenhuma carta válida para adicionar');
+    return;
+  }
+  
+  saveCollections(collections);
+  alert(`${addedCount} carta(s) adicionada(s)!`);
+  closeModal();
   openCollectionDetail(collectionName);
 }
 
@@ -3523,33 +3657,16 @@ document.getElementById('modal').addEventListener('click', function(event) {
 // ========== PIKACHU SVG SILHOUETTE ==========
 function getPikachuSVG() {
   return `
-    <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
-      <defs>
-        <linearGradient id="pikaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.3" />
-          <stop offset="100%" style="stop-color:#FF6B6B;stop-opacity:0.3" />
-        </linearGradient>
-      </defs>
-      <rect width="100" height="120" fill="url(#pikaGrad)"/>
-      <ellipse cx="50" cy="70" rx="25" ry="32" fill="#1a1a1a"/>
-      <circle cx="50" cy="30" r="22" fill="#1a1a1a"/>
-      <ellipse cx="32" cy="10" rx="6" ry="15" fill="#1a1a1a"/>
-      <ellipse cx="32" cy="8" rx="3" ry="6" fill="#FFD700"/>
-      <ellipse cx="68" cy="10" rx="6" ry="15" fill="#1a1a1a"/>
-      <ellipse cx="68" cy="8" rx="3" ry="6" fill="#FFD700"/>
-      <circle cx="42" cy="26" r="3" fill="white"/>
-      <circle cx="58" cy="26" r="3" fill="white"/>
-      <circle cx="42.5" cy="26.5" r="1.5" fill="#1a1a1a"/>
-      <circle cx="58.5" cy="26.5" r="1.5" fill="#1a1a1a"/>
-      <path d="M 48 35 Q 50 37 52 35" stroke="#1a1a1a" stroke-width="1.5" fill="none"/>
-      <circle cx="28" cy="32" r="5" fill="#FF6B6B" opacity="0.6"/>
-      <circle cx="72" cy="32" r="5" fill="#FF6B6B" opacity="0.6"/>
-      <ellipse cx="28" cy="65" rx="6" ry="18" transform="rotate(-20 28 65)" fill="#1a1a1a"/>
-      <ellipse cx="72" cy="65" rx="6" ry="18" transform="rotate(20 72 65)" fill="#1a1a1a"/>
-      <path d="M 68 85 Q 80 80 85 95 Q 87 105 78 108" stroke="#1a1a1a" stroke-width="6" fill="none" stroke-linecap="round"/>
-      <path d="M 78 108 Q 75 110 72 105" stroke="#FFD700" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <ellipse cx="42" cy="100" rx="5" ry="7" fill="#1a1a1a"/>
-      <ellipse cx="58" cy="100" rx="5" ry="7" fill="#1a1a1a"/>
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+      <!-- Top half - Red -->
+      <path d="M 5 50 A 45 45 0 0 1 95 50" fill="#EF5350" stroke="#333" stroke-width="2"/>
+      
+      <!-- Bottom half - White -->
+      <path d="M 5 50 A 45 45 0 0 1 95 50" fill="white" stroke="#333" stroke-width="2" transform="rotate(180 50 50)"/>
+      
+      <!-- Center circle -->
+      <circle cx="50" cy="50" r="12" fill="#333" stroke="#333" stroke-width="1"/>
+      <circle cx="50" cy="50" r="8" fill="white" stroke="none"/>
     </svg>
   `;
 }
