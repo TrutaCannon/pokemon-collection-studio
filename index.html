@@ -4321,7 +4321,10 @@ function loadCoverImageEditor(event) {
       previewDetailCover.innerHTML = `<img id="previewDetailImage" src="${imageDataUrl}" style="width: 100%; height: 100%; object-fit: cover;">`;
     }
     
-    renderCoverEditorPreview(imageDataUrl);
+    // Reattach event listeners após carregar imagem
+    setTimeout(() => {
+      attachCoverEditorEvents();
+    }, 50);
   };
   reader.readAsDataURL(file);
 }
