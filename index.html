@@ -266,7 +266,7 @@ body:has(.sidebar.collapsed) .main-content {
 .collection-cover img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .collection-cover-overlay {
@@ -4019,29 +4019,30 @@ function selectCoverType(collectionName) {
           padding: 1rem;
           cursor: pointer;
           transition: all 0.2s;
-          flex: 0;
+          flex: 1;
+          min-width: 200px;
+          max-width: 240px;
           display: flex;
           flex-direction: column;
           gap: 0.75rem;
           align-items: center;
           justify-content: flex-start;
         " onmouseover="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.2)';" onmouseout="this.style.borderColor='#ddd'; this.style.boxShadow='none';">
-          <div style="font-size: 1.2rem;">📖</div>
-          <div style="font-weight: bold; font-size: 11px;">Aba</div>
-          <div style="font-weight: bold; font-size: 11px;">Expandida</div>
-          <div style="font-size: 9px; color: #666; margin-bottom: 0.2rem; text-align: center; line-height: 1.2;">Capa ao lado da descrição</div>
+          <div style="font-size: 1.5rem;">📖</div>
+          <div style="font-weight: bold; font-size: 13px;">Aba Expandida</div>
+          <div style="font-size: 11px; color: #666; margin-bottom: 0.25rem;">Capa ao lado da descrição</div>
           
-          <!-- PREVIEW DA ABA EXPANDIDA - MENOR E DISCRETA -->
+          <!-- PREVIEW DA ABA EXPANDIDA - PROPORÇÃO EQUILIBRADA -->
           <div style="
-            width: 55px;
-            height: 75px;
+            width: 85px;
+            height: 119px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 4px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 24px;
             color: white;
             border: 1px solid #ddd;
           ">
