@@ -291,6 +291,10 @@ body:has(.sidebar.collapsed) .main-content {
   opacity: 1 !important;
 }
 
+.collection-card:hover .edit-detail-btn {
+  opacity: 1 !important;
+}
+
 .collection-card:hover .delete-cover-btn {
   opacity: 1 !important;
 }
@@ -3039,10 +3043,10 @@ function renderCollections() {
             <button onclick="openCollectionDetail('${name}')">Abrir coleção</button>
           </div>
         </div>
-        <button class="edit-cover-btn" onclick="openCoverEditor('${name}')" style="
+        <button class="edit-cover-btn" onclick="editCollectionCoverPokedex('${name}')" style="
           position: absolute;
           top: 0.75rem;
-          right: 2.5rem;
+          right: 5.5rem;
           background: none;
           border: none;
           cursor: pointer;
@@ -3051,8 +3055,23 @@ function renderCollections() {
           transition: opacity 0.2s;
           z-index: 10;
           padding: 0.5rem;
-        " title="Editar capa">
+        " title="Editar capa (Pokédex)">
           ✏️
+        </button>
+        <button class="edit-detail-btn" onclick="editCollectionCoverDetail('${name}')" style="
+          position: absolute;
+          top: 0.75rem;
+          right: 3rem;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 1.5rem;
+          opacity: 0;
+          transition: opacity 0.2s;
+          z-index: 10;
+          padding: 0.5rem;
+        " title="Editar capa (Aba expandida)">
+          🖼️
         </button>
         <button class="delete-cover-btn" onclick="if(confirm('Deletar coleção &quot;${name}&quot;?')) deleteCollection('${name}')" style="
           position: absolute;
@@ -3940,7 +3959,15 @@ function openCoverEditor(collectionName) {
   editCollectionCover(collectionName);
 }
 
-function editCollectionCover(collectionName) {
+function editCollectionCoverPokedex(collectionName) {
+  editCollectionCover(collectionName, 'pokedex');
+}
+
+function editCollectionCoverDetail(collectionName) {
+  editCollectionCover(collectionName, 'detail');
+}
+
+function editCollectionCover(collectionName, type = 'pokedex') {
   currentModal = 'editCollectionCover';
   editingCollectionName = collectionName;
   
@@ -3956,87 +3983,89 @@ function editCollectionCover(collectionName) {
   if (progress >= 33) barColor = '#ffb300';
   if (progress >= 66) barColor = '#4caf50';
   
-  document.getElementById('modalTitle').textContent = `Editar capa: ${collectionName}`;
+  document.getElementById('modalTitle').textContent = type === 'detail' 
+    ? `Editar capa (Aba Expandida): ${collectionName}` 
+    : `Editar capa (Pokédex): ${collectionName}`;
   
   document.getElementById('modalBody').innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-      <!-- DUAS PREVIEWS LADO A LADO -->
-      <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+      <!-- TIPO: POKEDEX -->
+      ${type === 'pokedex' ? `
+      <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center;">
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px;">📱 Pokédex - Card</div>
+        <div style="font-size: 12px; color: #666; margin-bottom: 15px;">Edição da capa que aparece na página inicial</div>
         
-        <!-- PREVIEW 1: CARD NA POKÉDEX -->
-        <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; flex: 1; min-width: 300px; max-width: 450px;">
-          <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px;">📱 Pokédex - Card</div>
-          
-          <div style="
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        <div style="
+          max-width: 400px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          overflow: hidden;
+        ">
+          <div id="previewCover" style="
+            width: 100%;
+            height: 320px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            position: relative;
             overflow: hidden;
+            cursor: grab;
+            user-select: none;
+            border: 2px solid #ddd;
           ">
-            <div id="previewCover" style="
-              width: 100%;
-              height: 320px;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 48px;
-              color: white;
-              position: relative;
-              overflow: hidden;
-              cursor: grab;
-              user-select: none;
-              border: 2px solid #ddd;
-            ">
-              ${coverImage ? `<img id="previewImage" src="${coverImage}" style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.05s;">` : '🎴'}
-            </div>
-            
-            <div style="padding: 1rem;">
-              <div style="font-weight: bold; margin-bottom: 0.5rem; font-size: 14px;">${collectionName}</div>
-              <div style="font-size: 12px; color: #666; margin-bottom: 0.75rem;">
-                <div>${collectedCards} / ${totalCards} cartas</div>
-              </div>
-              <div style="width: 100%; height: 6px; background: #ddd; border-radius: 3px; overflow: hidden;">
-                <div style="width: ${progress}%; height: 100%; background: ${barColor}; transition: width 0.3s;"></div>
-              </div>
-            </div>
+            ${coverImage ? `<img id="previewImage" src="${coverImage}" style="width: 100%; height: 100%; object-fit: contain; transition: transform 0.05s;">` : '🎴'}
           </div>
-        </div>
-        
-        <!-- PREVIEW 2: CAPA NA ABA EXPANDIDA -->
-        <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center; flex: 1; min-width: 300px; max-width: 380px;">
-          <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px;">📖 Aba Expandida</div>
           
-          <div style="display: flex; gap: 1.5rem; justify-content: center;">
-            <div id="previewDetailCover" style="
-              width: 180px;
-              height: 252px;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              border-radius: 8px;
-              overflow: hidden;
-              flex-shrink: 0;
-              position: relative;
-              font-size: 60px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: white;
-              border: 2px solid #ddd;
-            ">
-              ${coverImage ? `<img id="previewDetailImage" src="${coverImage}" style="width: 100%; height: 100%; object-fit: cover;">` : '🎴'}
+          <div style="padding: 1rem;">
+            <div style="font-weight: bold; margin-bottom: 0.5rem; font-size: 14px;">${collectionName}</div>
+            <div style="font-size: 12px; color: #666; margin-bottom: 0.75rem;">
+              <div>${collectedCards} / ${totalCards} cartas</div>
             </div>
-            
-            <div style="flex: 1; text-align: left; display: flex; flex-direction: column; justify-content: center;">
-              <div style="font-weight: bold; font-size: 14px; margin-bottom: 0.5rem;">${collectionName}</div>
-              <div style="font-size: 12px; color: #666; line-height: 1.5;">
-                ${data.description ? data.description.substring(0, 80) + (data.description.length > 80 ? '...' : '') : '📝 Descrição'}
-              </div>
+            <div style="width: 100%; height: 6px; background: #ddd; border-radius: 3px; overflow: hidden;">
+              <div style="width: ${progress}%; height: 100%; background: ${barColor}; transition: width 0.3s;"></div>
             </div>
           </div>
         </div>
       </div>
+      ` : `
+      <!-- TIPO: DETAIL -->
+      <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; text-align: center;">
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px;">📖 Aba Expandida</div>
+        <div style="font-size: 12px; color: #666; margin-bottom: 15px;">Edição da capa que aparece ao lado da descrição</div>
+        
+        <div style="display: flex; gap: 1.5rem; justify-content: center; max-width: 500px; margin: 0 auto;">
+          <div id="previewDetailCover" style="
+            width: 180px;
+            height: 252px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+            font-size: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border: 2px solid #ddd;
+          ">
+            ${coverImage ? `<img id="previewDetailImage" src="${coverImage}" style="width: 100%; height: 100%; object-fit: cover;">` : '🎴'}
+          </div>
+          
+          <div style="flex: 1; text-align: left; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-weight: bold; font-size: 14px; margin-bottom: 0.5rem;">${collectionName}</div>
+            <div style="font-size: 12px; color: #666; line-height: 1.5;">
+              ${data.description ? data.description.substring(0, 100) + (data.description.length > 100 ? '...' : '') : '📝 Descrição'}
+            </div>
+          </div>
+        </div>
+      </div>
+      `}
       
       <div style="font-size: 12px; color: #666; text-align: center; font-weight: 500;">
         📍 Use scroll para zoom (veja a carta completa) • 🖱️ Pressione e arraste para posicionar
