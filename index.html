@@ -1676,6 +1676,7 @@ const STORAGE_KEY = 'pokemon_collections'; // MANTÉM COMPATIBILIDADE COM v5
 
 let currentModal = null;
 let editingCollectionName = null;
+let editingCoverType = 'pokedex'; // 'pokedex' ou 'detail'
 
 // Migrar dados da v5 para v6 se necessário
 function migrateDataIfNeeded() {
@@ -3043,7 +3044,7 @@ function renderCollections() {
             <button onclick="openCollectionDetail('${name}')">Abrir coleção</button>
           </div>
         </div>
-        <button class="edit-cover-btn" onclick="editCollectionCoverPokedex('${name}')" style="
+        <button class="edit-cover-btn" onclick="selectCoverType('${name}')" style="
           position: absolute;
           top: 0.75rem;
           right: 5.5rem;
@@ -3058,7 +3059,7 @@ function renderCollections() {
         " title="Editar capa (Pokédex)">
           ✏️
         </button>
-        <button class="edit-detail-btn" onclick="editCollectionCoverDetail('${name}')" style="
+        <button class="edit-detail-btn" onclick="selectCoverType('${name}')" style="
           position: absolute;
           top: 0.75rem;
           right: 3rem;
@@ -3137,10 +3138,10 @@ function openCollectionDetail(collectionName) {
   
   document.getElementById('modalBody').innerHTML = `
     <div class="collection-detail-header">
-      <div class="collection-detail-cover ${data.coverImage ? '' : 'no-image'}" style="position: relative;">
-        ${data.coverImage ? `<img src="${data.coverImage}" alt="${collectionName}">` : '🎴'}
+      <div class="collection-detail-cover ${data.coverImageDetail || data.coverImage ? '' : 'no-image'}" style="position: relative;">
+        ${data.coverImageDetail ? `<img src="${data.coverImageDetail}" alt="${collectionName}">` : (data.coverImage ? `<img src="${data.coverImage}" alt="${collectionName}">` : '🎴')}
         <div class="collection-cover-detail-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; opacity: 0; transition: opacity 0.2s;">
-          <button onclick="editCollectionCover('${collectionName}')" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">📸 Editar Capa</button>
+          <button onclick="selectCoverType('${collectionName}')" style="background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">📸 Editar Capa</button>
         </div>
       </div>
       <style>
@@ -3955,15 +3956,117 @@ function saveCollectionDesc() {
   openCollectionDetail(editingCollectionName);
 }
 
-function openCoverEditor(collectionName) {
-  editCollectionCover(collectionName);
+function selectCoverType(collectionName) {
+  currentModal = 'selectCoverType';
+  const collections = getCollections();
+  const data = collections[collectionName];
+  const coverImagePokedex = data.coverImage || '';
+  const coverImageDetail = data.coverImageDetail || '';
+  
+  document.getElementById('modalTitle').textContent = `Editar capa: ${collectionName}`;
+  
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 1.5rem; padding: 1rem;">
+      <div style="text-align: center; font-size: 14px; color: #666; margin-bottom: 1rem;">
+        Qual tipo de capa deseja editar?
+      </div>
+      
+      <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+        
+        <!-- OPÇÃO 1: POKÉDEX -->
+        <button onclick="editCollectionCoverPokedex('${collectionName}')" style="
+          background: white;
+          border: 2px solid #ddd;
+          border-radius: 12px;
+          padding: 1.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          flex: 1;
+          min-width: 220px;
+          max-width: 280px;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          align-items: center;
+        " onmouseover="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.2)';" onmouseout="this.style.borderColor='#ddd'; this.style.boxShadow='none';">
+          <div style="font-size: 2rem;">📱</div>
+          <div style="font-weight: bold; font-size: 14px;">Pokédex - Card</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 0.5rem;">Capa da página inicial</div>
+          
+          <!-- PREVIEW DO CARD POKÉDEX -->
+          <div style="
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            border: 1px solid #ddd;
+          ">
+            ${coverImagePokedex ? `<img src="${coverImagePokedex}" style="width: 100%; height: 100%; object-fit: contain;">` : '🎴'}
+          </div>
+        </button>
+        
+        <!-- OPÇÃO 2: ABA EXPANDIDA -->
+        <button onclick="editCollectionCoverDetail('${collectionName}')" style="
+          background: white;
+          border: 2px solid #ddd;
+          border-radius: 12px;
+          padding: 1.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          flex: 1;
+          min-width: 220px;
+          max-width: 280px;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          align-items: center;
+        " onmouseover="this.style.borderColor='#667eea'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.2)';" onmouseout="this.style.borderColor='#ddd'; this.style.boxShadow='none';">
+          <div style="font-size: 2rem;">📖</div>
+          <div style="font-weight: bold; font-size: 14px;">Aba Expandida</div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 0.5rem;">Capa ao lado da descrição</div>
+          
+          <!-- PREVIEW DA ABA EXPANDIDA -->
+          <div style="
+            width: 90px;
+            height: 126px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            border: 1px solid #ddd;
+          ">
+            ${coverImageDetail ? `<img src="${coverImageDetail}" style="width: 100%; height: 100%; object-fit: cover;">` : '🎴'}
+          </div>
+        </button>
+        
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('modal').classList.add('active');
 }
 
 function editCollectionCoverPokedex(collectionName) {
+  editingCoverType = 'pokedex';
   editCollectionCover(collectionName, 'pokedex');
 }
 
 function editCollectionCoverDetail(collectionName) {
+  editingCoverType = 'detail';
   editCollectionCover(collectionName, 'detail');
 }
 
@@ -4238,8 +4341,13 @@ function saveCoverImageFromEditor() {
   const ctx = highResCanvas.getContext('2d');
   
   const state = window.coverEditorState;
+  const collections = getCollections();
+  const currentCollection = collections[editingCollectionName];
+  
+  // Obter a imagem baseado no tipo sendo editado
+  const currentImageField = editingCoverType === 'detail' ? 'coverImageDetail' : 'coverImage';
   const imageUrl = document.getElementById('coverUploadInput').dataset.imageUrl || 
-                   getCollections()[editingCollectionName].coverImage || '';
+                   currentCollection[currentImageField] || '';
   
   if (!imageUrl) {
     alert('Selecione uma imagem');
@@ -4278,9 +4386,8 @@ function saveCoverImageFromEditor() {
     ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
     ctx.restore();
     
-    // Salvar
-    const collections = getCollections();
-    collections[editingCollectionName].coverImage = highResCanvas.toDataURL('image/jpeg', 0.95);
+    // Salvar no campo correto
+    collections[editingCollectionName][currentImageField] = highResCanvas.toDataURL('image/jpeg', 0.95);
     saveCollections(collections);
     
     closeModal();
