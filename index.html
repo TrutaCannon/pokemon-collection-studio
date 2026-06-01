@@ -291,10 +291,6 @@ body:has(.sidebar.collapsed) .main-content {
   opacity: 1 !important;
 }
 
-.collection-card:hover .edit-detail-btn {
-  opacity: 1 !important;
-}
-
 .collection-card:hover .delete-cover-btn {
   opacity: 1 !important;
 }
@@ -3047,7 +3043,7 @@ function renderCollections() {
         <button class="edit-cover-btn" onclick="selectCoverType('${name}')" style="
           position: absolute;
           top: 0.75rem;
-          right: 5.5rem;
+          right: 0.75rem;
           background: none;
           border: none;
           cursor: pointer;
@@ -3056,23 +3052,8 @@ function renderCollections() {
           transition: opacity 0.2s;
           z-index: 10;
           padding: 0.5rem;
-        " title="Editar capa (Pokédex)">
+        " title="Editar capa">
           ✏️
-        </button>
-        <button class="edit-detail-btn" onclick="selectCoverType('${name}')" style="
-          position: absolute;
-          top: 0.75rem;
-          right: 3rem;
-          background: none;
-          border: none;
-          cursor: pointer;
-          font-size: 1.5rem;
-          opacity: 0;
-          transition: opacity 0.2s;
-          z-index: 10;
-          padding: 0.5rem;
-        " title="Editar capa (Aba expandida)">
-          🖼️
         </button>
         <button class="delete-cover-btn" onclick="if(confirm('Deletar coleção &quot;${name}&quot;?')) deleteCollection('${name}')" style="
           position: absolute;
