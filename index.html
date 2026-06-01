@@ -4330,13 +4330,13 @@ function loadCoverImageEditor(event) {
 }
 
 function saveCoverImageFromEditor() {
-  const canvas = document.getElementById('coverEditorCanvas');
-  if (!canvas) {
-    alert('Erro ao salvar capa');
+  const previewImage = document.getElementById('previewImage');
+  if (!previewImage) {
+    alert('Selecione uma imagem');
     return;
   }
   
-  // Salvar em ALTA RESOLUÇÃO (800x1080)
+  // Salvar em ALTA RESOLUÇÃO (1200x1600)
   const scale = 4;
   const highResCanvas = document.createElement('canvas');
   highResCanvas.width = 300 * scale;
@@ -4362,28 +4362,41 @@ function saveCoverImageFromEditor() {
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, highResCanvas.width, highResCanvas.height);
     
-    ctx.save();
-    ctx.translate(highResCanvas.width / 2, highResCanvas.height / 2);
-    ctx.scale(state.zoom, state.zoom);
-    ctx.translate(-highResCanvas.width / 2 + state.offsetX * scale, -highResCanvas.height / 2 + state.offsetY * scale);
+    // Usar o mesmo zoom e offset do preview
+    const zoom = state.zoom;
+    const offsetX = state.offsetX;
+    const offsetY = state.offsetY;
     
+    // Renderizar com transformações
+    ctx.save();
+    
+    // Centro do canvas
+    ctx.translate(highResCanvas.width / 2, highResCanvas.height / 2);
+    
+    // Aplicar zoom
+    ctx.scale(zoom, zoom);
+    
+    // Aplicar offset escalado (dividir por zoom para manter proporção)
+    ctx.translate(offsetX, offsetY);
+    
+    // Desenhar a imagem centralizada
     const imgWidth = img.width;
     const imgHeight = img.height;
-    const canvasAspect = highResCanvas.width / highResCanvas.height;
+    const canvasAspect = (highResCanvas.width / zoom) / (highResCanvas.height / zoom);
     const imgAspect = imgWidth / imgHeight;
     
     let drawWidth, drawHeight, drawX, drawY;
     
     if (imgAspect > canvasAspect) {
-      drawHeight = highResCanvas.height;
+      drawHeight = highResCanvas.height / zoom;
       drawWidth = drawHeight * imgAspect;
-      drawX = (highResCanvas.width - drawWidth) / 2;
-      drawY = 0;
+      drawX = -(drawWidth / 2);
+      drawY = -(drawHeight / 2);
     } else {
-      drawWidth = highResCanvas.width;
+      drawWidth = highResCanvas.width / zoom;
       drawHeight = drawWidth / imgAspect;
-      drawX = 0;
-      drawY = (highResCanvas.height - drawHeight) / 2;
+      drawX = -(drawWidth / 2);
+      drawY = -(drawHeight / 2);
     }
     
     ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
