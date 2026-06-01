@@ -266,7 +266,7 @@ body:has(.sidebar.collapsed) .main-content {
 .collection-cover img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .collection-cover-overlay {
@@ -3043,7 +3043,7 @@ function renderCollections() {
         <button class="edit-cover-btn" onclick="selectCoverType('${name}')" style="
           position: absolute;
           top: 0.75rem;
-          right: 0.75rem;
+          right: 3rem;
           background: none;
           border: none;
           cursor: pointer;
