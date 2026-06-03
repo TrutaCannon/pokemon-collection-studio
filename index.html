@@ -3880,7 +3880,7 @@ async function searchPokemonCard(nome, numero, total) {
       }
     }
     
-    // Estratégia 2: Buscar por número (sem total)
+    // Estratégia 2: Buscar por número (sem total) - MAS LEVAR EM CONTA O TOTAL SE FORNECIDO
     if (!card && numero) {
       try {
         const query = `q=number:${numero}`;
@@ -3892,8 +3892,27 @@ async function searchPokemonCard(nome, numero, total) {
           console.log(`  📊 ${data.data?.length || 0} cartas encontradas com número ${numero}`);
           
           if (data.data && data.data.length > 0) {
+            let candidates = data.data;
+            
+            // Se temos o total, filtrar cartas que tenham o printedTotal similar (±5 cartas de tolerância)
+            if (total && !isNaN(total)) {
+              const totalNum = parseInt(total);
+              const tolerance = 5; // Tolerância de ±5 cartas
+              
+              const exactMatch = candidates.filter(c => 
+                Math.abs((c.set?.printedTotal || 0) - totalNum) <= tolerance
+              );
+              
+              if (exactMatch.length > 0) {
+                console.log(`  🎯 Filtrando por printedTotal ~${total}: ${exactMatch.length} carta(s)`);
+                candidates = exactMatch;
+              } else {
+                console.log(`  ⚠️ Nenhuma série com ~${total} cartas encontrada, usando todas`);
+              }
+            }
+            
             // PRIORIDADE 1: Match exato de nome
-            card = data.data.find(c => 
+            card = candidates.find(c => 
               c.name.toLowerCase().trim() === nome.toLowerCase().trim()
             );
             
@@ -3901,7 +3920,7 @@ async function searchPokemonCard(nome, numero, total) {
             
             // PRIORIDADE 2: Nome começa com
             if (!card) {
-              card = data.data.find(c => 
+              card = candidates.find(c => 
                 c.name.toLowerCase().startsWith(nome.toLowerCase().trim())
               );
               console.log(`  🔍 Match começa com: ${card ? '✅' : '❌'}`);
@@ -3909,7 +3928,7 @@ async function searchPokemonCard(nome, numero, total) {
             
             // PRIORIDADE 3: Nome inclui
             if (!card) {
-              card = data.data.find(c => 
+              card = candidates.find(c => 
                 c.name.toLowerCase().includes(nome.toLowerCase().trim())
               );
               console.log(`  🔍 Match contém: ${card ? '✅' : '❌'}`);
@@ -3917,7 +3936,7 @@ async function searchPokemonCard(nome, numero, total) {
             
             // PRIORIDADE 4: Pegar primeira
             if (!card) {
-              card = data.data[0];
+              card = candidates[0];
               console.log(`  🔍 Fallback (primeira): ${card ? '✅' : '❌'}`);
             }
             
