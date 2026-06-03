@@ -3890,147 +3890,48 @@ function saveCardsFromList(collectionName) {
 }
 
 async function searchPokemonCard(nome, numero, total) {
-  let card = null;
+  console.log(`🔍 Buscando: ${nome} (${numero}/${total})`);
   
-  console.log(`🔍 Buscando: ${nome} (${numero}/${total || '?'})`);
-  
+  // ===== VALIDAÇÃO =====
+  if (!numero || !total) {
+    console.log(`  ❌ ERRO: Número ou total faltando!`);
+    return null;
+  }
+
   try {
-    // ===== ESTRATÉGIA 1: Busca EXATA (número + série) =====
-    if (numero && total) {
-      try {
-        const totalNum = parseInt(total);
-        const query = `q=number:${numero}`;
-        console.log(`  📡 Strategy 1 (number): ${query}`);
-        
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=100`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.data && data.data.length > 0) {
-            // PRIORIDADE 1A: Encontrar exatamente número + série correta + COM IMAGEM
-            const exactMatch = data.data.find(c => 
-              c.number === numero && 
-              c.set?.printedTotal === totalNum &&
-              (c.images?.large || c.images?.small)
-            );
-            
-            if (exactMatch) {
-              card = exactMatch;
-              console.log(`  ✅ [S1A] EXATO: ${card.name} #${numero}/${totalNum}`);
-            }
-            
-            // PRIORIDADE 1B: Mesmo número, série similar (±2) + COM IMAGEM
-            if (!card) {
-              const similarMatch = data.data.find(c => 
-                c.number === numero && 
-                Math.abs((c.set?.printedTotal || 0) - totalNum) <= 2 &&
-                (c.images?.large || c.images?.small)
-              );
-              
-              if (similarMatch) {
-                card = similarMatch;
-                console.log(`  ✅ [S1B] Similar: ${card.name} #${numero}/${card.set?.printedTotal}`);
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.warn(`  ⚠️ Erro S1:`, err);
-      }
-    }
-
-    // ===== ESTRATÉGIA 2: Busca por Nome + Número RIGOROSA =====
-    if (!card) {
-      try {
-        const nomeEncodado = encodeURIComponent(nome);
-        let query = `q=name:${nomeEncodado}`;
-        if (numero) {
-          query += ` number:${numero}`;
-        }
-        
-        console.log(`  📡 Strategy 2 (name+number): ${query}`);
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=50`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.data && data.data.length > 0) {
-            // SÓ candidatos COM IMAGEM
-            let candidates = data.data.filter(c => c.images?.large || c.images?.small);
-            
-            if (candidates.length === 0) {
-              console.log(`  ❌ Encontradas mas SEM IMAGEM`);
-              return null;
-            }
-            
-            // Se temos número E total, ser SUPER RIGOROSO
-            if (numero && total) {
-              const totalNum = parseInt(total);
-              card = candidates.find(c => 
-                c.number === numero && 
-                c.set?.printedTotal === totalNum
-              );
-              
-              if (card) {
-                console.log(`  ✅ [S2A] Nome+número EXATO: ${card.name}`);
-              } else {
-                // Se não encontrou EXATO, REJEITAR ao invés de usar fallback
-                console.log(`  ❌ [S2] NÃO ENCONTRADA: ${nome} (#${numero}/${total})`);
-                return null;
-              }
-            }
-            
-            // Se só tem nome, pega a primeira (com imagem)
-            if (!card && !numero) {
-              card = candidates[0];
-              console.log(`  ℹ️ [S2B] Só nome: ${card.name}`);
-            }
-          }
-        }
-      } catch (err) {
-        console.warn(`  ⚠️ Erro S2:`, err);
-      }
-    }
-
-    // ===== ESTRATÉGIA 3: ÚLTIMA TENTATIVA - Busca por nome + filtro ano =====
-    if (!card && nome) {
-      try {
-        const nomeEncodado = encodeURIComponent(nome);
-        console.log(`  📡 Strategy 3 (name only + 1999 filter): q=name:${nomeEncodado}`);
-        
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:${nomeEncodado}&pageSize=50`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.data && data.data.length > 0) {
-            // Procurar APENAS cartas com imagem DO BASE SET (1999)
-            const baseSetCards = data.data.filter(c => 
-              (c.images?.large || c.images?.small) && 
-              c.set?.releaseDate?.startsWith('1999')
-            );
-            
-            if (baseSetCards.length > 0) {
-              card = baseSetCards[0];
-              console.log(`  ✅ [S3] Base Set 1999: ${card.name} #${card.number}/${card.set?.printedTotal}`);
-            } else {
-              console.log(`  ❌ [S3] Nenhuma de 1999`);
-              return null;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn(`  ⚠️ Erro S3:`, err);
-      }
-    }
-
-    if (!card) {
-      console.log(`  ❌ FALHA FINAL: "${nome} (${numero}/${total})"`);
+    const totalNum = parseInt(total);
+    const numeroStr = String(numero);
+    
+    // ===== BUSCA ÚNICA E EXATA (como sites profissionais) =====
+    console.log(`  📡 Busca EXATA: number:${numeroStr} printedTotal:${totalNum}`);
+    
+    const response = await fetch(
+      `https://api.pokemontcg.io/v2/cards?q=number:${numeroStr} printedTotal:${totalNum}&pageSize=10`
+    );
+    
+    if (!response.ok) {
+      console.log(`  ❌ Erro API: ${response.status}`);
       return null;
     }
 
-    // ===== VALIDAR E SALVAR =====
+    const data = await response.json();
+    
+    if (!data.data || data.data.length === 0) {
+      console.log(`  ❌ Nenhuma carta encontrada para #${numeroStr}/${totalNum}`);
+      return null;
+    }
+
+    // Filtrar APENAS cartas com imagem
+    const withImage = data.data.filter(c => c.images?.large || c.images?.small);
+    
+    if (withImage.length === 0) {
+      console.log(`  ❌ Encontrada mas SEM IMAGEM`);
+      return null;
+    }
+
+    const card = withImage[0]; // Pega a primeira com imagem
+    
+    // ===== VALIDAR RESULTADO =====
     let ano = '';
     let colecao = '';
     
@@ -4041,18 +3942,13 @@ async function searchPokemonCard(nome, numero, total) {
       }
     }
     
-    const imagemUrl = card.images?.large || card.images?.small || '';
-    const cardCode = card.set ? `${card.number}/${card.set.printedTotal || '?'}` : card.number || '';
+    const imagemUrl = card.images?.large || '';
+    const cardCode = `${card.number}/${card.set?.printedTotal || total}`;
     
-    if (!imagemUrl) {
-      console.log(`  ❌ REJEITA: SEM IMAGEM!`);
-      return null;
-    }
-    
-    console.log(`  ✅ SUCESSO: ${card.name} (${cardCode})`);
+    console.log(`  ✅ ENCONTRADA: ${card.name} (${cardCode}) - ${colecao}`);
     
     return {
-      name: card.name || nome,
+      name: card.name,
       code: cardCode,
       ano: ano,
       colecao: colecao,
@@ -4065,7 +3961,7 @@ async function searchPokemonCard(nome, numero, total) {
     };
 
   } catch (err) {
-    console.error(`  ❌ Erro geral:`, err);
+    console.error(`  ❌ Erro:`, err);
     return null;
   }
 }
