@@ -3901,7 +3901,6 @@ async function searchPokemonCard(nome, numero, total) {
     const totalNum = parseInt(total);
     const numeroStr = String(numero);
     
-    // ===== BUSCA POR NÚMERO APENAS =====
     console.log(`  📡 Query: q=number:${numeroStr}`);
     
     const response = await fetch(
@@ -3920,24 +3919,29 @@ async function searchPokemonCard(nome, numero, total) {
       return null;
     }
 
+    console.log(`  📊 Encontradas ${data.data.length} cartas com #${numeroStr}`);
+    
+    // DEBUG: Mostrar todas as opções
+    data.data.forEach((c, idx) => {
+      const hasImage = c.images?.large ? '✅' : '❌';
+      console.log(`     [${idx}] ${c.name} - set: ${c.set?.name} (${c.set?.printedTotal}) - imagem: ${hasImage}`);
+    });
+
     // ===== FILTRAR POR printedTotal + IMAGEM =====
     let candidates = data.data.filter(c => 
       c.set?.printedTotal === totalNum && 
       (c.images?.large || c.images?.small)
     );
     
+    console.log(`  🎯 Após filtrar por printedTotal:${totalNum} + imagem: ${candidates.length} resultado(s)`);
+    
     if (candidates.length === 0) {
-      console.log(`  ❌ Nenhuma com printedTotal:${totalNum} ou sem imagem`);
-      console.log(`  Debug: Encontradas ${data.data.length} cartas #${numeroStr}`);
-      data.data.slice(0, 3).forEach(c => {
-        console.log(`    - ${c.name}: ${c.set?.printedTotal} cartas, imagem: ${c.images?.large ? '✅' : '❌'}`);
-      });
+      console.log(`  ❌ FALHA: Nenhuma com printedTotal:${totalNum} OU sem imagem`);
       return null;
     }
 
     const card = candidates[0];
     
-    // ===== VALIDAR =====
     let ano = '';
     let colecao = '';
     
@@ -3956,7 +3960,7 @@ async function searchPokemonCard(nome, numero, total) {
       return null;
     }
     
-    console.log(`  ✅ OK: ${card.name} (${cardCode}) - ${colecao}`);
+    console.log(`  ✅ SUCESSO: ${card.name} (${cardCode}) - ${colecao} [${imagemUrl.substring(0, 50)}...]`);
     
     return {
       name: card.name,
