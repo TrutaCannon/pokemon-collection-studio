@@ -4107,6 +4107,13 @@ function renderCardGroups(collectionName, cards) {
   }
   
   Object.entries(groups).sort().forEach(([groupName, groupCards]) => {
+    // Ordenar cartas por número
+    groupCards.sort((a, b) => {
+      const numA = parseInt(a.code?.split('/')[0] || '0') || 0;
+      const numB = parseInt(b.code?.split('/')[0] || '0') || 0;
+      return numA - numB;
+    });
+    
     const groupDiv = document.createElement('div');
     groupDiv.style.marginBottom = '1.5rem';
     
