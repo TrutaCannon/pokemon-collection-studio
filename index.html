@@ -3892,9 +3892,8 @@ function saveCardsFromList(collectionName) {
 async function searchPokemonCard(nome, numero, total) {
   console.log(`🔍 Buscando: ${nome} (${numero}/${total})`);
   
-  // ===== VALIDAÇÃO =====
   if (!numero || !total) {
-    console.log(`  ❌ ERRO: Número ou total faltando!`);
+    console.log(`  ❌ Número ou total faltando!`);
     return null;
   }
 
@@ -3902,11 +3901,11 @@ async function searchPokemonCard(nome, numero, total) {
     const totalNum = parseInt(total);
     const numeroStr = String(numero);
     
-    // ===== BUSCA ÚNICA E EXATA (como sites profissionais) =====
-    console.log(`  📡 Busca EXATA: number:${numeroStr} printedTotal:${totalNum}`);
+    // ===== BUSCA POR NÚMERO APENAS =====
+    console.log(`  📡 Query: q=number:${numeroStr}`);
     
     const response = await fetch(
-      `https://api.pokemontcg.io/v2/cards?q=number:${numeroStr} printedTotal:${totalNum}&pageSize=10`
+      `https://api.pokemontcg.io/v2/cards?q=number:${numeroStr}&pageSize=50`
     );
     
     if (!response.ok) {
@@ -3917,21 +3916,28 @@ async function searchPokemonCard(nome, numero, total) {
     const data = await response.json();
     
     if (!data.data || data.data.length === 0) {
-      console.log(`  ❌ Nenhuma carta encontrada para #${numeroStr}/${totalNum}`);
+      console.log(`  ❌ Nenhuma carta #${numeroStr}`);
       return null;
     }
 
-    // Filtrar APENAS cartas com imagem
-    const withImage = data.data.filter(c => c.images?.large || c.images?.small);
+    // ===== FILTRAR POR printedTotal + IMAGEM =====
+    let candidates = data.data.filter(c => 
+      c.set?.printedTotal === totalNum && 
+      (c.images?.large || c.images?.small)
+    );
     
-    if (withImage.length === 0) {
-      console.log(`  ❌ Encontrada mas SEM IMAGEM`);
+    if (candidates.length === 0) {
+      console.log(`  ❌ Nenhuma com printedTotal:${totalNum} ou sem imagem`);
+      console.log(`  Debug: Encontradas ${data.data.length} cartas #${numeroStr}`);
+      data.data.slice(0, 3).forEach(c => {
+        console.log(`    - ${c.name}: ${c.set?.printedTotal} cartas, imagem: ${c.images?.large ? '✅' : '❌'}`);
+      });
       return null;
     }
 
-    const card = withImage[0]; // Pega a primeira com imagem
+    const card = candidates[0];
     
-    // ===== VALIDAR RESULTADO =====
+    // ===== VALIDAR =====
     let ano = '';
     let colecao = '';
     
@@ -3942,10 +3948,15 @@ async function searchPokemonCard(nome, numero, total) {
       }
     }
     
-    const imagemUrl = card.images?.large || '';
-    const cardCode = `${card.number}/${card.set?.printedTotal || total}`;
+    const imagemUrl = card.images?.large || card.images?.small || '';
+    const cardCode = `${card.number}/${card.set?.printedTotal}`;
     
-    console.log(`  ✅ ENCONTRADA: ${card.name} (${cardCode}) - ${colecao}`);
+    if (!imagemUrl) {
+      console.log(`  ❌ SEM IMAGEM!`);
+      return null;
+    }
+    
+    console.log(`  ✅ OK: ${card.name} (${cardCode}) - ${colecao}`);
     
     return {
       name: card.name,
