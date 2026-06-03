@@ -4997,6 +4997,11 @@ function initSidebar() {
   if (savedState) {
     collapseSidebar();
   }
+  
+  // Renderizar coleções na inicialização
+  setTimeout(() => {
+    renderCollections();
+  }, 100);
 }
 
 function toggleSidebar() {
