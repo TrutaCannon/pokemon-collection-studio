@@ -3439,6 +3439,19 @@ function openCardDetailModal(collectionName, cardIndex) {
           <input type="text" id="editCardSet" value="${card.colecao || ''}" placeholder="Ex: Delta Species">
         </div>
         
+        <!-- ILUSTRADOR E RARIDADE -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>🎨 Ilustrador</label>
+            <input type="text" id="editCardArtist" value="${card.ilustrador || ''}" placeholder="Ex: Ken Sugimori" style="font-size: 13px;">
+          </div>
+          
+          <div class="form-group">
+            <label>💎 Raridade</label>
+            <input type="text" id="editCardRarity" value="${card.raridade || ''}" placeholder="Ex: Holo Rara" style="font-size: 13px;">
+          </div>
+        </div>
+        
         <div style="padding: 1rem; background: #f5f5f5; border-radius: 4px; margin-top: 2rem;">
           <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #666; margin-bottom: 0.75rem;">Status</div>
           <label style="display: flex; align-items: center; gap: 0.75rem; font-weight: normal; text-transform: none; cursor: pointer;">
@@ -3545,7 +3558,8 @@ function saveCardDetails(collectionName, cardIndex) {
   const name = document.getElementById('editCardName').value.trim();
   const year = document.getElementById('editCardYear').value.trim();
   const set = document.getElementById('editCardSet').value.trim();
-  const imageURL = document.getElementById('editCardImageURL').value.trim();
+  const artist = document.getElementById('editCardArtist').value.trim();
+  const rarity = document.getElementById('editCardRarity').value.trim();
   const collected = document.getElementById('editCardCollected').checked;
   
   if (!name) {
@@ -3559,7 +3573,8 @@ function saveCardDetails(collectionName, cardIndex) {
   card.name = name;
   card.ano = year;
   card.colecao = set;
-  card.image_url = imageURL;
+  card.ilustrador = artist;
+  card.raridade = rarity;
   card.collected = collected;
   
   saveCollections(collections);
