@@ -5041,15 +5041,22 @@ function toggleTheme() {
 
 // ============ SIDEBAR COLLAPSE FUNCTIONS ============
 function initSidebar() {
+  console.log('🔧 initSidebar() chamado');
   const savedState = localStorage.getItem('sidebarCollapsed') === 'true';
   if (savedState) {
     collapseSidebar();
   }
   
   // Renderizar coleções na inicialização
+  console.log('📦 Verificando localStorage...');
+  const collections = JSON.parse(localStorage.getItem('pokemon_collections') || '{}');
+  console.log(`✅ Encontradas ${Object.keys(collections).length} coleções`);
+  console.log('🎴 Renderizando coleções...');
+  
   setTimeout(() => {
     renderCollections();
-  }, 100);
+    console.log('✅ renderCollections() executado');
+  }, 50);
 }
 
 function toggleSidebar() {
