@@ -3992,36 +3992,61 @@ async function searchPokemonCard(nome, numero, total) {
       }
     }
     
-    // Estratégia 3: Buscar por nome + número
+    // Estratégia 3: Buscar por nome + número + série
     if (!card) {
       try {
         const nomeEncodado = encodeURIComponent(nome);
         let query = `q=name:${nomeEncodado}`;
         
-        // Se temos número, adicionar à query para ser mais preciso
+        // Se temos número, adicionar à query
         if (numero) {
           query += ` number:${numero}`;
         }
         
         console.log(`  📡 Query por nome + número: ${query}`);
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=50`);
         
         if (response.ok) {
           const data = await response.json();
           
           if (data.data && data.data.length > 0) {
-            // Priorizar exatamente o número correto
-            if (numero) {
-              card = data.data.find(c => c.number === numero);
+            let candidates = data.data;
+            
+            // PRIORIDADE 1: Se temos número E total, buscar exatamente isso
+            if (numero && total) {
+              const totalNum = parseInt(total);
+              card = candidates.find(c => 
+                c.number === numero && 
+                c.set?.printedTotal === totalNum
+              );
+              
               if (card) {
-                console.log(`  ✅ Encontrada por nome + número exato: ${card.name} (#${numero})`);
+                console.log(`  ✅ Encontrada por nome + número exato + série: ${card.name} (#${numero}/${total})`);
               }
             }
             
-            // Se não encontrou com número ou não temos número, pega a primeira
+            // PRIORIDADE 2: Se temos número, buscar pelo número com tolerância de série
+            if (!card && numero) {
+              const totalNum = total ? parseInt(total) : null;
+              card = candidates.find(c => {
+                if (c.number !== numero) return false;
+                // Se temos total, ser rigoroso (±3 cartas só)
+                if (totalNum) {
+                  return Math.abs((c.set?.printedTotal || 0) - totalNum) <= 3;
+                }
+                // Senão, pega a primeira com esse número (base set tem prioridade)
+                return true;
+              });
+              
+              if (card) {
+                console.log(`  ✅ Encontrada por nome + número: ${card.name}`);
+              }
+            }
+            
+            // PRIORIDADE 3: Se não encontrou com número, pega a primeira (último recurso)
             if (!card) {
-              card = data.data[0];
-              console.log(`  🔍 Fallback (primeira por nome): ${card.name}`);
+              card = candidates[0];
+              console.log(`  ⚠️ Fallback (primeira por nome): ${card.name} - CUIDADO: pode estar errado!`);
             }
             console.log(`  ✅ Encontrada por nome: ${card.name}`);
           }
