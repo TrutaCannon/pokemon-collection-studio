@@ -1691,6 +1691,23 @@ Venusaur,Base Set,003,https://...
   </div>
 </div>
 
+<!-- Modal de Confirmação -->
+<div id="confirmModal" class="modal">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <div class="modal-title">Confirmação</div>
+      <button class="modal-close" onclick="document.getElementById('confirmModal').classList.remove('active')">✕</button>
+    </div>
+    <div style="padding: 1.5rem; text-align: center;">
+      <p id="confirmMessage" style="color: #1a1a1a; font-size: 16px; margin-bottom: 2rem;"></p>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button id="confirmCancelBtn" class="btn" style="background-color: #999;">Cancelar</button>
+        <button id="confirmOkBtn" class="btn" style="background-color: #d32f2f;">Deletar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const STORAGE_KEY = 'pokemon_collections'; // MANTÉM COMPATIBILIDADE COM v5
 
@@ -4261,12 +4278,28 @@ function saveImportCollected() {
 }
 
 function deleteCollection(collectionName) {
-  if (!confirm(`Deletar coleção "${collectionName}"?`)) return;
+  showConfirmDialog(`Deletar coleção "${collectionName}"?`, () => {
+    const collections = getCollections();
+    delete collections[collectionName];
+    saveCollections(collections);
+    renderCollections();
+  });
+}
+
+function showConfirmDialog(message, onConfirm) {
+  const modal = document.getElementById('confirmModal');
+  if (!modal) return;
   
-  const collections = getCollections();
-  delete collections[collectionName];
-  saveCollections(collections);
-  renderCollections();
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('confirmOkBtn').onclick = () => {
+    modal.classList.remove('active');
+    onConfirm();
+  };
+  document.getElementById('confirmCancelBtn').onclick = () => {
+    modal.classList.remove('active');
+  };
+  
+  modal.classList.add('active');
 }
 
 function editCollectionName(collectionName) {
