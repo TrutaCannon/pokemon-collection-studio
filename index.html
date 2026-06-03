@@ -3936,6 +3936,27 @@ async function searchPokemonCard(nome, numero, total) {
     
     console.log(`  🎯 Após filtrar por printedTotal:${totalNum} + ano:1999 + imagem: ${candidates.length} resultado(s)`);
     
+    // DEBUG: Se nenhum encontrado, mostrar alternativas
+    if (candidates.length === 0) {
+      console.log(`  ⚠️ Nenhuma encontrada com filtro RIGOROSO. Alternativas:`);
+      data.data.slice(0, 5).forEach(c => {
+        const ano = c.set?.releaseDate?.substring(0, 4) || '?';
+        const hasImage = c.images?.large ? '✅' : '❌';
+        console.log(`     - ${c.name}: ano=${ano}, total=${c.set?.printedTotal}, imagem=${hasImage}`);
+      });
+      
+      // Se não encontrou com 1999, tenta com printedTotal + imagem (sem filtro de ano)
+      const looser = data.data.filter(c =>
+        c.set?.printedTotal === totalNum &&
+        (c.images?.large || c.images?.small)
+      );
+      
+      if (looser.length > 0) {
+        console.log(`  🔄 Tentando SEM filtro de ano... encontradas ${looser.length}`);
+        candidates = looser;
+      }
+    }
+    
     if (candidates.length === 0) {
       console.log(`  ❌ FALHA: Nenhuma com printedTotal:${totalNum} OU sem imagem`);
       return null;
