@@ -5076,6 +5076,19 @@ function initTheme() {
   applyTheme(savedTheme);
 }
 
+// ⚠️ DETECTOR DE LIMPEZA DE STORAGE
+function checkStorageStatus() {
+  const collections = localStorage.getItem('pokemon_collections');
+  if (!collections || Object.keys(JSON.parse(collections || '{}')).length === 0) {
+    console.warn('⚠️ ATENÇÃO: Nenhuma coleção encontrada no localStorage!');
+    console.warn('⚠️ Se você perdeu dados, pode ter usado Ctrl+Shift+Delete (limpa tudo)');
+    console.log('✅ Use apenas Ctrl+Shift+R para recarregar (não limpa dados!)');
+  }
+}
+
+// Verificar status na inicialização
+setTimeout(checkStorageStatus, 500);
+
 function applyTheme(theme) {
   const themeToggle = document.getElementById('themeToggle');
   const themeToggleSidebar = document.getElementById('themeToggleSidebar');
