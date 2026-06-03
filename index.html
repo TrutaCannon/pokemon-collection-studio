@@ -3808,10 +3808,12 @@ async function searchPokemonCard(nome, codigo) {
       
       try {
         const query = `q=number:${numero}`;
+        console.log(`  📡 Query: ${query}`);
         const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=50`);
         
         if (response.ok) {
           const data = await response.json();
+          console.log(`  📊 ${data.data?.length || 0} cartas encontradas com número ${numero}`);
           
           if (data.data && data.data.length > 0) {
             // IMPORTANTE: Procurar carta que bate o NOME, não pegar qualquer uma com número
@@ -3822,10 +3824,15 @@ async function searchPokemonCard(nome, codigo) {
             
             // Se não encontrou match, pegar a primeira (fallback)
             if (!card) {
+              console.log(`  ⚠️ Nome não bateu, pegando primeira carta: ${data.data[0].name}`);
               card = data.data[0];
             }
             
-            console.log(`✅ Encontrada por código: ${card.name}`);
+            console.log(`  ✅ Card encontrado: ${card.name}`);
+            console.log(`  🖼️ Imagem: ${card.images?.large ? '✅ SIM' : '❌ NÃO'}`);
+            if (card.images?.large) {
+              console.log(`     URL: ${card.images.large.substring(0, 50)}...`);
+            }
           }
         }
       } catch (err) {
@@ -3886,12 +3893,19 @@ async function searchPokemonCard(nome, codigo) {
         }
       }
       
+      const imagemUrl = card.images?.large || card.images?.small || '';
+      
+      console.log(`  💾 Salvando: ${card.name}`);
+      console.log(`     - Código: ${card.number}`);
+      console.log(`     - Série: ${colecao}`);
+      console.log(`     - Imagem: ${imagemUrl ? '✅ ' + imagemUrl.substring(0, 60) + '...' : '❌ SEM IMAGEM'}`);
+      
       return {
         name: card.name || nome,
         code: card.number || codigo || '',
         ano: ano,
         colecao: colecao,
-        image: card.images?.large || card.images?.small || '', // IMPORTANTE: salvar como 'image', não 'image_url'
+        image: imagemUrl,
         tipo: card.type || '',
         raridade: card.rarity || '',
         hp: card.hp || '',
