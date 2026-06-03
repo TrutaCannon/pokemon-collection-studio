@@ -422,6 +422,14 @@ body:has(.sidebar.collapsed) .main-content {
   padding: 1.5rem;
 }
 
+/* Modal de sucesso (cartas adicionadas) */
+.modal.success .modal-content {
+  max-width: 400px;
+  width: min(90vw, 400px);
+  max-height: auto;
+  padding: 1.5rem;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -3837,6 +3845,7 @@ function saveCardsFromList(collectionName) {
     console.log(`   ✅ Coleção salva em localStorage`);
     
     document.getElementById('modal').classList.remove('searching');
+    document.getElementById('modal').classList.add('success');
     document.getElementById('modalTitle').textContent = '✅ Cartas adicionadas com sucesso!';
     document.getElementById('modalBody').innerHTML = `
       <div style="text-align: center; padding: 2rem;">
@@ -3978,7 +3987,17 @@ async function searchPokemonCard(nome, numero, total) {
           const data = await response.json();
           
           if (data.data && data.data.length > 0) {
-            card = data.data[0];
+            // Se temos o número, priorizar carta com esse número
+            if (numero) {
+              card = data.data.find(c => c.number === numero);
+              console.log(`  🔍 Match por nome + número ${numero}: ${card ? '✅' : '❌'}`);
+            }
+            
+            // Se não encontrou com número ou não temos número, pega a primeira
+            if (!card) {
+              card = data.data[0];
+              console.log(`  🔍 Fallback (primeira por nome): ✅`);
+            }
             console.log(`  ✅ Encontrada por nome: ${card.name}`);
           }
         }
@@ -4789,6 +4808,7 @@ function saveCollectionName() {
 function closeModal() {
   document.getElementById('modal').classList.remove('active');
   document.getElementById('modal').classList.remove('searching');
+  document.getElementById('modal').classList.remove('success');
   window.tempCoverImage = null;
   window.tempCardImage = null;
 }
