@@ -3109,8 +3109,17 @@ function renderCollections() {
 }
 
 function openCollectionDetail(collectionName) {
+  console.log(`👁️ openCollectionDetail('${collectionName}') chamada`);
   const collections = getCollections();
   const data = collections[collectionName];
+  
+  if (!data) {
+    console.error(`❌ Coleção não encontrada: ${collectionName}`);
+    return;
+  }
+  
+  console.log(`   - Total de cartas: ${data.cards.length}`);
+  console.log(`   - Com imagem: ${data.cards.filter(c => c.image).length}`);
   
   editingCollectionName = collectionName;
   currentModal = 'collectionDetail';
@@ -3800,8 +3809,16 @@ function saveCardsFromList(collectionName) {
   }
   
   function finalizarAdição() {
+    console.log(`📦 finalizarAdição() chamada`);
+    console.log(`   - Coleção: ${collectionName}`);
+    console.log(`   - Cartas a adicionar: ${cardsToAdd.length}`);
+    console.log(`   - Com imagem: ${cardsToAdd.filter(c => c.image).length}`);
+    
     collections[collectionName].cards.push(...cardsToAdd);
+    console.log(`   - Total de cartas na coleção: ${collections[collectionName].cards.length}`);
+    
     saveCollections(collections);
+    console.log(`   ✅ Coleção salva em localStorage`);
     
     document.getElementById('modal').classList.remove('searching');
     document.getElementById('modalTitle').textContent = '✅ Cartas adicionadas com sucesso!';
@@ -3813,7 +3830,7 @@ function saveCardsFromList(collectionName) {
           ${cardsToAdd.filter(c => c.image).length} com imagem encontrada
         </p>
         <div class="modal-buttons">
-          <button class="btn btn-primary" onclick="closeModal(); openCollectionDetail('${collectionName}')">Ver Coleção</button>
+          <button class="btn btn-primary" onclick="console.log('🔘 Botão Ver Coleção clicado'); closeModal(); openCollectionDetail('${collectionName}')">Ver Coleção</button>
         </div>
       </div>
     `;
@@ -4002,7 +4019,12 @@ function renderCardGroups(collectionName, cards) {
   
   // Renderizar grupos
   const container = document.getElementById('cardsGroupsContainer');
-  if (!container) return;
+  if (!container) {
+    console.error('❌ Container cardsGroupsContainer não encontrado!');
+    return;
+  }
+  
+  console.log(`   ✅ Container encontrado, renderizando ${groupCards.length} grupos...`);
   
   container.innerHTML = '';
   
