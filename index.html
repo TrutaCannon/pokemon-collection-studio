@@ -3797,56 +3797,63 @@ function saveCardsFromList(collectionName) {
       return;
     }
     
-    const line = lines[processedIndex];
-    const { nome, numero, total } = parseCardLine(line);
+    // Processar até 5 cartas em paralelo
+    const batchSize = 5;
+    const promises = [];
+    const batchIndices = [];
     
-    if (!nome) {
-      processedIndex++;
-      processNextCard();
-      return;
-    }
-    
-    try {
-      // Tentar buscar a carta
-      const cartaBuscada = await searchPokemonCard(nome, numero, total);
+    for (let i = 0; i < batchSize && processedIndex < lines.length; i++) {
+      const line = lines[processedIndex];
+      const { nome, numero, total } = parseCardLine(line);
       
-      if (cartaBuscada) {
-        cardsToAdd.push(cartaBuscada);
+      batchIndices.push(processedIndex);
+      processedIndex++;
+      
+      if (!nome) {
+        promises.push(Promise.resolve(null));
       } else {
-        // Se não encontrar, adicionar com dados parciais
-        cardsToAdd.push({
-          name: nome,
-          code: numero || '',
-          colecao: '',
-          image: '',
-          tipo: '',
-          raridade: '',
-          collected: false
-        });
+        promises.push(searchPokemonCard(nome, numero, total).catch(err => {
+          console.error('Erro ao buscar carta:', err);
+          return null;
+        }));
       }
-    } catch (error) {
-      console.error('Erro ao buscar carta:', error);
-      cardsToAdd.push({
-        name: nome,
-        code: numero || '',
-        colecao: '',
-        image: '',
-        tipo: '',
-        raridade: '',
-        collected: false
-      });
     }
     
-    processedIndex++;
-    processedCount++;
+    // Aguardar todas as 5 requisições
+    try {
+      const results = await Promise.all(promises);
+      
+      results.forEach((cartaBuscada, idx) => {
+        const line = lines[batchIndices[idx]];
+        const { nome, numero, total } = parseCardLine(line);
+        
+        if (cartaBuscada) {
+          cardsToAdd.push(cartaBuscada);
+        } else {
+          cardsToAdd.push({
+            name: nome,
+            code: numero || '',
+            colecao: '',
+            image: '',
+            tipo: '',
+            raridade: '',
+            collected: false
+          });
+        }
+        
+        processedCount++;
+        
+        // Atualizar barra de progresso
+        const progress = (processedCount / totalCards) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+        document.getElementById('progressText').textContent = `${processedCount}/${totalCards}`;
+      });
+    } catch (error) {
+      console.error('Erro no batch de cartas:', error);
+    }
     
-    // Atualizar barra de progresso
-    const progress = (processedCount / totalCards) * 100;
-    document.getElementById('progressBar').style.width = progress + '%';
-    document.getElementById('progressText').textContent = `${processedCount}/${totalCards}`;
-    
-    // Processar próxima carta
-    setTimeout(processNextCard, 100);
+    // Processar próximo batch
+    setTimeout(processNextCard, 50);
   }
   
   function finalizarAdição() {
