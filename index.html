@@ -3766,27 +3766,57 @@ function saveCardsFromList(collectionName) {
 
 async function searchPokemonCard(nome, codigo) {
   try {
-    // Montar query de busca
+    let card = null;
     let query = '';
     
+    // Estratégia 1: Buscar por número (código) se disponível
     if (codigo) {
-      // Se tem código, buscar por código primeiro
-      query = `q=number:${codigo}`;
-    } else {
-      // Senão, buscar por nome
-      query = `q=name:"${nome}"`;
+      // Extrair apenas o número do código (ex: "25/102" -> "25")
+      const numeroMatch = codigo.match(/^(\d+)/);
+      const numero = numeroMatch ? numeroMatch[1] : codigo;
+      
+      query = `q=number:${numero}`;
+      const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
+      const data = await response.json();
+      
+      if (data.data && data.data.length > 0) {
+        // Priorizar cartas da série base
+        card = data.data.find(c => 
+          c.name.toLowerCase().includes(nome.toLowerCase()) ||
+          c.number === numero
+        ) || data.data[0];
+      }
     }
     
-    const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=10`);
-    const data = await response.json();
+    // Estratégia 2: Se não encontrou, buscar por nome
+    if (!card) {
+      query = `q=name:"${nome}"`;
+      const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
+      const data = await response.json();
+      
+      if (data.data && data.data.length > 0) {
+        card = data.data[0];
+      }
+    }
     
-    if (data.data && data.data.length > 0) {
-      const card = data.data[0];
+    // Estratégia 3: Busca parcial por nome se ainda não encontrou
+    if (!card && nome.length > 3) {
+      query = `q=name:*${nome}*`;
+      const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
+      const data = await response.json();
+      
+      if (data.data && data.data.length > 0) {
+        card = data.data[0];
+      }
+    }
+    
+    if (card) {
+      console.log(`✅ Encontrada: ${card.name} (${card.number})`);
       
       return {
-        name: card.name,
-        code: card.number,
-        colecao: card.set?.printedTotal ? `${card.set.name} (${card.number}/${card.set.printedTotal})` : card.set?.name || '',
+        name: card.name || nome,
+        code: card.number || codigo || '',
+        colecao: card.set ? `${card.set.name} (${card.number}/${card.set.printedTotal || '?'})` : '',
         image_url: card.images?.large || card.images?.small || '',
         tipo: card.type || '',
         raridade: card.rarity || '',
@@ -3795,9 +3825,11 @@ async function searchPokemonCard(nome, codigo) {
       };
     }
     
+    console.warn(`⚠️ Não encontrada: ${nome} ${codigo}`);
     return null;
+    
   } catch (error) {
-    console.error('Erro na busca:', error);
+    console.error(`❌ Erro ao buscar ${nome}:`, error);
     return null;
   }
 }
