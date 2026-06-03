@@ -407,16 +407,16 @@ body:has(.sidebar.collapsed) .main-content {
   background: white;
   border-radius: 8px;
   padding: 2rem;
-  max-width: 1000px;
-  width: 75vw;
-  max-height: 85vh;
+  max-width: 1200px;
+  width: 90vw;
+  max-height: 90vh;
   overflow-y: auto;
   min-width: 300px;
-  width: min(90vw, 600px);
 }
 
 /* Modal de busca deve ser mais compacto */
 .modal.searching .modal-content {
+  max-width: 450px;
   width: min(90vw, 450px);
   max-height: 400px;
   padding: 1.5rem;
@@ -442,6 +442,13 @@ body:has(.sidebar.collapsed) .main-content {
   font-size: 24px;
   cursor: pointer;
   color: #999;
+}
+
+#cardsGroupsContainer {
+  min-height: 300px;
+  display: grid;
+  gap: 2rem;
+  margin-top: 1.5rem;
 }
 
 /* FORM */
