@@ -3955,6 +3955,7 @@ async function searchPokemonCard(nome, numero, total) {
     console.error(`❌ Erro ao buscar ${nome}:`, error);
     return null;
   }
+}
 
 function renderCardGroups(collectionName, cards) {
   const filterYear = document.getElementById('filterYear')?.value || '';
