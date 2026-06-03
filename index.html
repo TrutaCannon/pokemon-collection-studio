@@ -3682,6 +3682,36 @@ function saveCardsFromList(collectionName) {
   let cardsToAdd = [];
   let processedIndex = 0;
   
+  // Função para fazer parse da entrada
+  function parseCardLine(line) {
+    // Formato esperado: "Pikachu 25/102" ou "Pikachu" ou "Pikachu 25"
+    const trimmed = line.trim();
+    
+    // Tenta encontrar padrão: Nome Número/Total ou Nome Número
+    const match = trimmed.match(/^(.+?)\s+(\d+(?:\/\d+)?)$|^(.+)$/);
+    
+    if (match) {
+      if (match[1]) {
+        // Encontrou padrão "Nome Código"
+        return {
+          nome: match[1].trim(),
+          codigo: match[2].trim()
+        };
+      } else {
+        // Só tem o nome
+        return {
+          nome: match[3].trim(),
+          codigo: ''
+        };
+      }
+    }
+    
+    return {
+      nome: trimmed,
+      codigo: ''
+    };
+  }
+  
   async function processNextCard() {
     if (processedIndex >= lines.length) {
       // Todas as cartas foram processadas
@@ -3690,9 +3720,9 @@ function saveCardsFromList(collectionName) {
     }
     
     const line = lines[processedIndex];
-    const parts = line.split(/[\|#,]/g).map(p => p.trim()).filter(p => p);
+    const { nome, codigo } = parseCardLine(line);
     
-    if (parts.length === 0) {
+    if (!nome) {
       processedIndex++;
       processNextCard();
       return;
@@ -3700,15 +3730,15 @@ function saveCardsFromList(collectionName) {
     
     try {
       // Tentar buscar a carta
-      const cartaBuscada = await searchPokemonCard(parts[0], parts[1]);
+      const cartaBuscada = await searchPokemonCard(nome, codigo);
       
       if (cartaBuscada) {
         cardsToAdd.push(cartaBuscada);
       } else {
         // Se não encontrar, adicionar com dados parciais
         cardsToAdd.push({
-          name: parts[0],
-          code: parts[1] || '',
+          name: nome,
+          code: codigo || '',
           colecao: '',
           image_url: '',
           tipo: '',
@@ -3719,8 +3749,8 @@ function saveCardsFromList(collectionName) {
     } catch (error) {
       console.error('Erro ao buscar carta:', error);
       cardsToAdd.push({
-        name: parts[0],
-        code: parts[1] || '',
+        name: nome,
+        code: codigo || '',
         colecao: '',
         image_url: '',
         tipo: '',
@@ -3767,7 +3797,8 @@ function saveCardsFromList(collectionName) {
 async function searchPokemonCard(nome, codigo) {
   try {
     let card = null;
-    let query = '';
+    
+    console.log(`🔍 Buscando: ${nome} (${codigo || 'sem código'})`);
     
     // Estratégia 1: Buscar por número (código) se disponível
     if (codigo) {
@@ -3775,44 +3806,73 @@ async function searchPokemonCard(nome, codigo) {
       const numeroMatch = codigo.match(/^(\d+)/);
       const numero = numeroMatch ? numeroMatch[1] : codigo;
       
-      query = `q=number:${numero}`;
-      const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
-      const data = await response.json();
-      
-      if (data.data && data.data.length > 0) {
-        // Priorizar cartas da série base
-        card = data.data.find(c => 
-          c.name.toLowerCase().includes(nome.toLowerCase()) ||
-          c.number === numero
-        ) || data.data[0];
+      try {
+        const query = `q=number:${numero}`;
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=50`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.data && data.data.length > 0) {
+            // Procurar a carta que melhor corresponda ao nome
+            card = data.data.find(c => 
+              c.name.toLowerCase() === nome.toLowerCase()
+            );
+            
+            // Se não encontrou match exato, pegar a primeira
+            if (!card) {
+              card = data.data[0];
+            }
+            
+            console.log(`✅ Encontrada por código: ${card.name}`);
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ Erro na busca por código:`, err);
       }
     }
     
-    // Estratégia 2: Se não encontrou, buscar por nome
+    // Estratégia 2: Se não encontrou, buscar por nome exato
     if (!card) {
-      query = `q=name:"${nome}"`;
-      const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
-      const data = await response.json();
-      
-      if (data.data && data.data.length > 0) {
-        card = data.data[0];
+      try {
+        // URL encode o nome corretamente
+        const nomeEncodado = encodeURIComponent(nome);
+        const query = `q=name:${nomeEncodado}`;
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=50`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.data && data.data.length > 0) {
+            card = data.data.find(c => c.name.toLowerCase() === nome.toLowerCase()) || data.data[0];
+            console.log(`✅ Encontrada por nome: ${card.name}`);
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ Erro na busca por nome exato:`, err);
       }
     }
     
-    // Estratégia 3: Busca parcial por nome se ainda não encontrou
+    // Estratégia 3: Busca parcial se nome tem mais de 3 caracteres
     if (!card && nome.length > 3) {
-      query = `q=name:*${nome}*`;
-      const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
-      const data = await response.json();
-      
-      if (data.data && data.data.length > 0) {
-        card = data.data[0];
+      try {
+        const nomeInicial = nome.split(' ')[0]; // Pegar primeira palavra
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(nomeInicial)}&pageSize=50`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.data && data.data.length > 0) {
+            card = data.data[0];
+            console.log(`✅ Encontrada por busca parcial: ${card.name}`);
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ Erro na busca parcial:`, err);
       }
     }
     
     if (card) {
-      console.log(`✅ Encontrada: ${card.name} (${card.number})`);
-      
       return {
         name: card.name || nome,
         code: card.number || codigo || '',
@@ -3825,7 +3885,7 @@ async function searchPokemonCard(nome, codigo) {
       };
     }
     
-    console.warn(`⚠️ Não encontrada: ${nome} ${codigo}`);
+    console.warn(`❌ Não encontrada: ${nome} ${codigo}`);
     return null;
     
   } catch (error) {
