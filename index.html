@@ -3740,7 +3740,7 @@ function saveCardsFromList(collectionName) {
           name: nome,
           code: codigo || '',
           colecao: '',
-          image_url: '',
+          image: '',
           tipo: '',
           raridade: '',
           collected: false
@@ -3752,7 +3752,7 @@ function saveCardsFromList(collectionName) {
         name: nome,
         code: codigo || '',
         colecao: '',
-        image_url: '',
+        image: '',
         tipo: '',
         raridade: '',
         collected: false
@@ -3814,12 +3814,13 @@ async function searchPokemonCard(nome, codigo) {
           const data = await response.json();
           
           if (data.data && data.data.length > 0) {
-            // Procurar a carta que melhor corresponda ao nome
+            // IMPORTANTE: Procurar carta que bate o NOME, não pegar qualquer uma com número
             card = data.data.find(c => 
-              c.name.toLowerCase() === nome.toLowerCase()
+              c.name.toLowerCase() === nome.toLowerCase() ||
+              c.name.toLowerCase().includes(nome.toLowerCase())
             );
             
-            // Se não encontrou match exato, pegar a primeira
+            // Se não encontrou match, pegar a primeira (fallback)
             if (!card) {
               card = data.data[0];
             }
@@ -3873,11 +3874,24 @@ async function searchPokemonCard(nome, codigo) {
     }
     
     if (card) {
+      // Extrair ano da série se possível
+      let ano = '';
+      let colecao = '';
+      
+      if (card.set) {
+        colecao = `${card.set.name} (${card.number}/${card.set.printedTotal || '?'})`;
+        // Tentar extrair ano do nome da série ou da data de lançamento
+        if (card.set.releaseDate) {
+          ano = card.set.releaseDate.substring(0, 4);
+        }
+      }
+      
       return {
         name: card.name || nome,
         code: card.number || codigo || '',
-        colecao: card.set ? `${card.set.name} (${card.number}/${card.set.printedTotal || '?'})` : '',
-        image_url: card.images?.large || card.images?.small || '',
+        ano: ano,
+        colecao: colecao,
+        image: card.images?.large || card.images?.small || '', // IMPORTANTE: salvar como 'image', não 'image_url'
         tipo: card.type || '',
         raridade: card.rarity || '',
         hp: card.hp || '',
