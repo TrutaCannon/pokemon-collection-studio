@@ -3781,7 +3781,7 @@ function saveCardsFromList(collectionName) {
         <div style="font-size: 48px; margin-bottom: 1rem;">✅</div>
         <p style="font-size: 16px; font-weight: bold; margin-bottom: 0.5rem;">${cardsToAdd.length} carta(s) adicionada(s)!</p>
         <p style="font-size: 13px; color: #666; margin-bottom: 1.5rem;">
-          ${cardsToAdd.filter(c => c.image_url).length} com imagem encontrada
+          ${cardsToAdd.filter(c => c.image).length} com imagem encontrada
         </p>
         <div class="modal-buttons">
           <button class="btn btn-primary" onclick="closeModal(); openCollectionDetail('${collectionName}')">Ver Coleção</button>
@@ -3809,29 +3809,49 @@ async function searchPokemonCard(nome, codigo) {
       try {
         const query = `q=number:${numero}`;
         console.log(`  📡 Query: ${query}`);
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=50`);
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=250`);
         
         if (response.ok) {
           const data = await response.json();
           console.log(`  📊 ${data.data?.length || 0} cartas encontradas com número ${numero}`);
           
           if (data.data && data.data.length > 0) {
-            // IMPORTANTE: Procurar carta que bate o NOME, não pegar qualquer uma com número
+            // PRIORIDADE 1: Match exato de nome
             card = data.data.find(c => 
-              c.name.toLowerCase() === nome.toLowerCase() ||
-              c.name.toLowerCase().includes(nome.toLowerCase())
+              c.name.toLowerCase().trim() === nome.toLowerCase().trim()
             );
             
-            // Se não encontrou match, pegar a primeira (fallback)
+            console.log(`  🔍 Match exato: ${card ? '✅' : '❌'}`);
+            
+            // PRIORIDADE 2: Nome começa com (ex: "Pikachu" encontra "Pikachu ex")
             if (!card) {
-              console.log(`  ⚠️ Nome não bateu, pegando primeira carta: ${data.data[0].name}`);
-              card = data.data[0];
+              card = data.data.find(c => 
+                c.name.toLowerCase().startsWith(nome.toLowerCase().trim())
+              );
+              console.log(`  🔍 Match começa com: ${card ? '✅' : '❌'}`);
+            }
+            
+            // PRIORIDADE 3: Nome inclui (ex: "Pika" encontra "Pikachu")
+            if (!card) {
+              card = data.data.find(c => 
+                c.name.toLowerCase().includes(nome.toLowerCase().trim())
+              );
+              console.log(`  🔍 Match contém: ${card ? '✅' : '❌'}`);
+            }
+            
+            // PRIORIDADE 4: Pegar a primeira da série Base (se possível)
+            if (!card) {
+              const baseSets = data.data.filter(c => 
+                c.set?.name.includes('Base') || c.set?.name.includes('base')
+              );
+              card = baseSets.length > 0 ? baseSets[0] : data.data[0];
+              console.log(`  🔍 Fallback Base Set: ${card ? '✅' : '❌'}`);
             }
             
             console.log(`  ✅ Card encontrado: ${card.name}`);
             console.log(`  🖼️ Imagem: ${card.images?.large ? '✅ SIM' : '❌ NÃO'}`);
             if (card.images?.large) {
-              console.log(`     URL: ${card.images.large.substring(0, 50)}...`);
+              console.log(`     URL: ${card.images.large.substring(0, 60)}...`);
             }
           }
         }
