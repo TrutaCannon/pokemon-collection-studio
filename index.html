@@ -4031,9 +4031,16 @@ function renderCardGroups(collectionName, cards) {
     return;
   }
   
-  console.log(`   ✅ Container encontrado, renderizando ${groupCards.length} grupos...`);
+  console.log(`   ✅ Container encontrado, renderizando ${Object.keys(groups).length} grupos...`);
   
   container.innerHTML = '';
+  
+  // Se não há cartas, mostrar mensagem
+  if (Object.keys(groups).length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: #999; padding: 2rem;">📭 Nenhuma carta encontrada</div>`;
+    console.log('   ⚠️ Nenhum grupo de cartas para renderizar');
+    return;
+  }
   
   Object.entries(groups).sort().forEach(([groupName, groupCards]) => {
     const groupDiv = document.createElement('div');
