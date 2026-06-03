@@ -3943,10 +3943,17 @@ async function searchPokemonCard(nome, numero, total) {
               console.log(`  🔍 Match contém: ${card ? '✅' : '❌'}`);
             }
             
-            // PRIORIDADE 4: Pegar primeira
+            // PRIORIDADE 4: Pegar primeira APENAS se não temos filtro de série
             if (!card) {
-              card = candidates[0];
-              console.log(`  🔍 Fallback (primeira): ${card ? '✅' : '❌'}`);
+              if (!total) {
+                // Se não tem printedTotal para filtrar, pega a primeira
+                card = candidates[0];
+                console.log(`  🔍 Fallback (primeira): ✅`);
+              } else {
+                // Se temos printedTotal e não encontrou match, significa que a série está errada
+                // Melhor tentar a estratégia 3 (busca por nome) do que pegar errado
+                console.log(`  ❌ Série ${total} não encontrou match de nome - tentando próxima estratégia`);
+              }
             }
             
             if (card) {
@@ -3986,7 +3993,8 @@ async function searchPokemonCard(nome, numero, total) {
       let colecao = '';
       
       if (card.set) {
-        colecao = `${card.set.name} (${card.number}/${card.set.printedTotal || '?'})`;
+        // Salvar APENAS o nome da série (sem número) para agrupamento correto
+        colecao = card.set.name;
         if (card.set.releaseDate) {
           ano = card.set.releaseDate.substring(0, 4);
         }
