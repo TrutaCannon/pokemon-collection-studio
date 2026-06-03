@@ -411,6 +411,15 @@ body:has(.sidebar.collapsed) .main-content {
   width: 75vw;
   max-height: 85vh;
   overflow-y: auto;
+  min-width: 300px;
+  width: min(90vw, 600px);
+}
+
+/* Modal de busca deve ser mais compacto */
+.modal.searching .modal-content {
+  width: min(90vw, 450px);
+  max-height: 400px;
+  padding: 1.5rem;
 }
 
 .modal-header {
@@ -3663,10 +3672,12 @@ function saveCardsFromList(collectionName) {
   let totalCards = lines.length;
   
   // Mostrar progresso
-  document.getElementById('modal').classList.remove('active');
+  const modal = document.getElementById('modal');
+  modal.classList.add('searching');
+  modal.classList.add('active');
   document.getElementById('modalTitle').textContent = '🔍 Buscando cartas...';
   document.getElementById('modalBody').innerHTML = `
-    <div style="text-align: center; padding: 2rem;">
+    <div style="text-align: center; padding: 1.5rem;">
       <div style="font-size: 48px; margin-bottom: 1rem;">🔍</div>
       <p style="font-size: 14px; color: #666;">Buscando <strong>${totalCards}</strong> carta(s) na base de dados...</p>
       <div style="width: 100%; height: 6px; background: #ddd; border-radius: 3px; margin-top: 1rem; overflow: hidden;">
@@ -3792,6 +3803,7 @@ function saveCardsFromList(collectionName) {
     collections[collectionName].cards.push(...cardsToAdd);
     saveCollections(collections);
     
+    document.getElementById('modal').classList.remove('searching');
     document.getElementById('modalTitle').textContent = '✅ Cartas adicionadas com sucesso!';
     document.getElementById('modalBody').innerHTML = `
       <div style="text-align: center; padding: 2rem;">
@@ -4695,6 +4707,7 @@ function saveCollectionName() {
 
 function closeModal() {
   document.getElementById('modal').classList.remove('active');
+  document.getElementById('modal').classList.remove('searching');
   window.tempCoverImage = null;
   window.tempCardImage = null;
 }
