@@ -5054,10 +5054,19 @@ function initSidebar() {
   console.log(`✅ Encontradas ${Object.keys(collections).length} coleções`);
   console.log('🎴 Renderizando coleções...');
   
-  setTimeout(() => {
+  // Tentar renderizar imediatamente
+  try {
     renderCollections();
-    console.log('✅ renderCollections() executado');
-  }, 50);
+    console.log('✅ renderCollections() executado (imediato)');
+  } catch (e) {
+    console.warn('⚠️ Erro ao renderizar imediatamente:', e);
+    
+    // Se falhar, tentar com delay
+    setTimeout(() => {
+      renderCollections();
+      console.log('✅ renderCollections() executado (com delay)');
+    }, 200);
+  }
 }
 
 function toggleSidebar() {
@@ -5095,12 +5104,26 @@ function expandSidebar() {
 
 // Inicializar tema ao carregar a página
 window.addEventListener('DOMContentLoaded', () => {
+  console.log('📄 DOMContentLoaded disparado');
   initTheme();
   initSidebar();
+  
+  // Garantir renderização das coleções
+  setTimeout(() => {
+    console.log('🔄 Renderizando coleções (verificação adicional)...');
+    renderCollections();
+  }, 300);
 });
 if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  console.log('📄 DOM já carregado, inicializando...');
   initTheme();
   initSidebar();
+  
+  // Garantir renderização das coleções
+  setTimeout(() => {
+    console.log('🔄 Renderizando coleções (verificação adicional)...');
+    renderCollections();
+  }, 300);
 }
 </script>
 
