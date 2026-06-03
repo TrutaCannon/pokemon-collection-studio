@@ -3927,13 +3927,14 @@ async function searchPokemonCard(nome, numero, total) {
       console.log(`     [${idx}] ${c.name} - set: ${c.set?.name} (${c.set?.printedTotal}) - imagem: ${hasImage}`);
     });
 
-    // ===== FILTRAR POR printedTotal + IMAGEM =====
+    // ===== FILTRAR POR printedTotal + ANO (1999) + IMAGEM =====
     let candidates = data.data.filter(c => 
       c.set?.printedTotal === totalNum && 
+      c.set?.releaseDate?.startsWith('1999') &&
       (c.images?.large || c.images?.small)
     );
     
-    console.log(`  🎯 Após filtrar por printedTotal:${totalNum} + imagem: ${candidates.length} resultado(s)`);
+    console.log(`  🎯 Após filtrar por printedTotal:${totalNum} + ano:1999 + imagem: ${candidates.length} resultado(s)`);
     
     if (candidates.length === 0) {
       console.log(`  ❌ FALHA: Nenhuma com printedTotal:${totalNum} OU sem imagem`);
