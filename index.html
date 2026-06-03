@@ -3961,6 +3961,7 @@ async function searchPokemonCard(nome, numero, total) {
     }
     
     console.warn(`❌ Não encontrada: ${nome} (${numero}/${total})`);
+    console.log('📊 Retornando NULL - nenhuma estratégia funcionou');
     return null;
     
   } catch (error) {
@@ -3977,6 +3978,14 @@ function renderCardGroups(collectionName, cards) {
   let filteredCards = cards;
   if (filterYear) filteredCards = filteredCards.filter(c => c.ano === filterYear);
   if (filterSet) filteredCards = filteredCards.filter(c => c.colecao === filterSet);
+  
+  // DEBUG: Contar imagens
+  const cardsComImagem = cards.filter(c => c.image && c.image.length > 0).length;
+  const cartosSemImagem = cards.filter(c => !c.image || c.image.length === 0).length;
+  console.log(`🎴 renderCardGroups: ${cards.length} cartas (${cardsComImagem} com imagem, ${cartosSemImagem} sem)`);
+  if (cardsComImagem > 0) {
+    console.log(`  ✅ Exemplo de imagem: ${cards.find(c => c.image)?.image?.substring(0, 80)}...`);
+  }
   
   // Agrupar por "ano - colecao"
   const groups = {};
