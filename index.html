@@ -3631,13 +3631,13 @@ function openAddCardsFromListModal(collectionName) {
   document.getElementById('modalTitle').textContent = 'Adicionar Cartas via Lista';
   
   document.getElementById('modalBody').innerHTML = `
-    <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">🔍 <strong>Busca automática:</strong> Digite o nome ou código da carta (uma por linha) e a app vai buscar automaticamente na base de dados!</p>
-    <p style="color: #999; margin-bottom: 1rem; font-size: 12px;">Formatos aceitos: <code>Pikachu</code> | <code>Pikachu 25/102</code> | <code>Charizard 4/102</code></p>
+    <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">🔍 <strong>Busca automática:</strong> Cole nome + código e a app busca automaticamente na base de dados!</p>
+    <p style="color: #999; margin-bottom: 1rem; font-size: 12px;">Formato: <code>Nome (Número/Total)</code> — Exemplo: <code>Pikachu (25/102)</code></p>
     
-    <textarea id="cardsListInput" placeholder="Pikachu 25/102&#10;Charizard 4/102&#10;Blastoise 2/102&#10;Venusaur 3/102&#10;&#10;(centenas de cartas...)&#10;&#10;Cole quantas cartas quiser!" style="width: 100%; height: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
+    <textarea id="cardsListInput" placeholder="Pikachu (25/102)&#10;Charizard (4/130)&#10;Blastoise (2/102)&#10;Venusaur (3/102)&#10;Dragonite (5/102)&#10;&#10;(centenas de cartas...)&#10;&#10;Cole quantas cartas quiser!" style="width: 100%; height: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
     
     <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 1rem; margin-top: 1rem; border-radius: 4px; font-size: 12px; color: #2e7d32;">
-      ✨ <strong>O app vai:</strong> Buscar cada carta na API Pokémon TCG, baixar imagens, preencher tipo, raridade e todas as informações!
+      ✨ <strong>O app vai:</strong> Buscar cada carta na API pelo número+total, preencher imagem, tipo, raridade e série corretamente!
     </div>
     
     <div class="modal-buttons">
@@ -3684,31 +3684,48 @@ function saveCardsFromList(collectionName) {
   
   // Função para fazer parse da entrada
   function parseCardLine(line) {
-    // Formato esperado: "Pikachu 25/102" ou "Pikachu" ou "Pikachu 25"
+    // Novos formatos:
+    // "Pikachu (25/102)"
+    // "Charizard (4/130)"
+    // Fallback: "Pikachu 25/102" ou "Pikachu 25"
+    
     const trimmed = line.trim();
     
-    // Tenta encontrar padrão: Nome Número/Total ou Nome Número
-    const match = trimmed.match(/^(.+?)\s+(\d+(?:\/\d+)?)$|^(.+)$/);
-    
+    // Tentar format: "Nome (Número/Total)"
+    let match = trimmed.match(/^(.+?)\s*\(\s*(\d+)\s*\/\s*(\d+)\s*\)$/);
     if (match) {
-      if (match[1]) {
-        // Encontrou padrão "Nome Código"
-        return {
-          nome: match[1].trim(),
-          codigo: match[2].trim()
-        };
-      } else {
-        // Só tem o nome
-        return {
-          nome: match[3].trim(),
-          codigo: ''
-        };
-      }
+      return {
+        nome: match[1].trim(),
+        numero: match[2],
+        total: match[3]
+      };
     }
     
+    // Tentar format: "Nome Número/Total" (sem parênteses)
+    match = trimmed.match(/^(.+?)\s+(\d+)\s*\/\s*(\d+)$/);
+    if (match) {
+      return {
+        nome: match[1].trim(),
+        numero: match[2],
+        total: match[3]
+      };
+    }
+    
+    // Tentar format: "Nome Número" (sem total)
+    match = trimmed.match(/^(.+?)\s+(\d+)$/);
+    if (match) {
+      return {
+        nome: match[1].trim(),
+        numero: match[2],
+        total: ''
+      };
+    }
+    
+    // Apenas o nome
     return {
       nome: trimmed,
-      codigo: ''
+      numero: '',
+      total: ''
     };
   }
   
@@ -3720,7 +3737,7 @@ function saveCardsFromList(collectionName) {
     }
     
     const line = lines[processedIndex];
-    const { nome, codigo } = parseCardLine(line);
+    const { nome, numero, total } = parseCardLine(line);
     
     if (!nome) {
       processedIndex++;
@@ -3730,7 +3747,7 @@ function saveCardsFromList(collectionName) {
     
     try {
       // Tentar buscar a carta
-      const cartaBuscada = await searchPokemonCard(nome, codigo);
+      const cartaBuscada = await searchPokemonCard(nome, numero, total);
       
       if (cartaBuscada) {
         cardsToAdd.push(cartaBuscada);
@@ -3738,7 +3755,7 @@ function saveCardsFromList(collectionName) {
         // Se não encontrar, adicionar com dados parciais
         cardsToAdd.push({
           name: nome,
-          code: codigo || '',
+          code: numero || '',
           colecao: '',
           image: '',
           tipo: '',
@@ -3750,7 +3767,7 @@ function saveCardsFromList(collectionName) {
       console.error('Erro ao buscar carta:', error);
       cardsToAdd.push({
         name: nome,
-        code: codigo || '',
+        code: numero || '',
         colecao: '',
         image: '',
         tipo: '',
@@ -3794,22 +3811,45 @@ function saveCardsFromList(collectionName) {
   processNextCard();
 }
 
-async function searchPokemonCard(nome, codigo) {
+async function searchPokemonCard(nome, numero, total) {
   try {
     let card = null;
     
-    console.log(`🔍 Buscando: ${nome} (${codigo || 'sem código'})`);
+    console.log(`🔍 Buscando: ${nome} (${numero}/${total || '?'})`);
     
-    // Estratégia 1: Buscar por número (código) se disponível
-    if (codigo) {
-      // Extrair apenas o número do código (ex: "25/102" -> "25")
-      const numeroMatch = codigo.match(/^(\d+)/);
-      const numero = numeroMatch ? numeroMatch[1] : codigo;
-      
+    // Estratégia 1: Buscar por número + total (série específica)
+    if (numero && total) {
+      try {
+        const query = `q=number:${numero} printedTotal:${total}`;
+        console.log(`  📡 Query com total: ${query}`);
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`  📊 ${data.data?.length || 0} cartas encontradas (número:${numero}, total:${total})`);
+          
+          if (data.data && data.data.length > 0) {
+            // Match exato de nome
+            card = data.data.find(c => 
+              c.name.toLowerCase().trim() === nome.toLowerCase().trim()
+            );
+            
+            if (card) {
+              console.log(`  ✅ Encontrada por número+total+nome: ${card.name}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`⚠️ Erro na busca com total:`, err);
+      }
+    }
+    
+    // Estratégia 2: Buscar por número (sem total)
+    if (!card && numero) {
       try {
         const query = `q=number:${numero}`;
-        console.log(`  📡 Query: ${query}`);
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=250`);
+        console.log(`  📡 Query por número: ${query}`);
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=100`);
         
         if (response.ok) {
           const data = await response.json();
@@ -3823,7 +3863,7 @@ async function searchPokemonCard(nome, codigo) {
             
             console.log(`  🔍 Match exato: ${card ? '✅' : '❌'}`);
             
-            // PRIORIDADE 2: Nome começa com (ex: "Pikachu" encontra "Pikachu ex")
+            // PRIORIDADE 2: Nome começa com
             if (!card) {
               card = data.data.find(c => 
                 c.name.toLowerCase().startsWith(nome.toLowerCase().trim())
@@ -3831,7 +3871,7 @@ async function searchPokemonCard(nome, codigo) {
               console.log(`  🔍 Match começa com: ${card ? '✅' : '❌'}`);
             }
             
-            // PRIORIDADE 3: Nome inclui (ex: "Pika" encontra "Pikachu")
+            // PRIORIDADE 3: Nome inclui
             if (!card) {
               card = data.data.find(c => 
                 c.name.toLowerCase().includes(nome.toLowerCase().trim())
@@ -3839,64 +3879,40 @@ async function searchPokemonCard(nome, codigo) {
               console.log(`  🔍 Match contém: ${card ? '✅' : '❌'}`);
             }
             
-            // PRIORIDADE 4: Pegar a primeira da série Base (se possível)
+            // PRIORIDADE 4: Pegar primeira
             if (!card) {
-              const baseSets = data.data.filter(c => 
-                c.set?.name.includes('Base') || c.set?.name.includes('base')
-              );
-              card = baseSets.length > 0 ? baseSets[0] : data.data[0];
-              console.log(`  🔍 Fallback Base Set: ${card ? '✅' : '❌'}`);
+              card = data.data[0];
+              console.log(`  🔍 Fallback (primeira): ${card ? '✅' : '❌'}`);
             }
             
-            console.log(`  ✅ Card encontrado: ${card.name}`);
-            console.log(`  🖼️ Imagem: ${card.images?.large ? '✅ SIM' : '❌ NÃO'}`);
-            if (card.images?.large) {
-              console.log(`     URL: ${card.images.large.substring(0, 60)}...`);
+            if (card) {
+              console.log(`  ✅ Encontrada por número: ${card.name}`);
             }
           }
         }
       } catch (err) {
-        console.warn(`⚠️ Erro na busca por código:`, err);
+        console.warn(`⚠️ Erro na busca por número:`, err);
       }
     }
     
-    // Estratégia 2: Se não encontrou, buscar por nome exato
+    // Estratégia 3: Buscar por nome
     if (!card) {
       try {
-        // URL encode o nome corretamente
         const nomeEncodado = encodeURIComponent(nome);
         const query = `q=name:${nomeEncodado}`;
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=50`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.data && data.data.length > 0) {
-            card = data.data.find(c => c.name.toLowerCase() === nome.toLowerCase()) || data.data[0];
-            console.log(`✅ Encontrada por nome: ${card.name}`);
-          }
-        }
-      } catch (err) {
-        console.warn(`⚠️ Erro na busca por nome exato:`, err);
-      }
-    }
-    
-    // Estratégia 3: Busca parcial se nome tem mais de 3 caracteres
-    if (!card && nome.length > 3) {
-      try {
-        const nomeInicial = nome.split(' ')[0]; // Pegar primeira palavra
-        const response = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(nomeInicial)}&pageSize=50`);
+        console.log(`  📡 Query por nome: ${query}`);
+        const response = await fetch(`https://api.pokemontcg.io/v2/cards?${query}&pageSize=20`);
         
         if (response.ok) {
           const data = await response.json();
           
           if (data.data && data.data.length > 0) {
             card = data.data[0];
-            console.log(`✅ Encontrada por busca parcial: ${card.name}`);
+            console.log(`  ✅ Encontrada por nome: ${card.name}`);
           }
         }
       } catch (err) {
-        console.warn(`⚠️ Erro na busca parcial:`, err);
+        console.warn(`⚠️ Erro na busca por nome:`, err);
       }
     }
     
@@ -3907,7 +3923,6 @@ async function searchPokemonCard(nome, codigo) {
       
       if (card.set) {
         colecao = `${card.set.name} (${card.number}/${card.set.printedTotal || '?'})`;
-        // Tentar extrair ano do nome da série ou da data de lançamento
         if (card.set.releaseDate) {
           ano = card.set.releaseDate.substring(0, 4);
         }
@@ -3922,7 +3937,7 @@ async function searchPokemonCard(nome, codigo) {
       
       return {
         name: card.name || nome,
-        code: card.number || codigo || '',
+        code: card.number || numero || '',
         ano: ano,
         colecao: colecao,
         image: imagemUrl,
@@ -3933,14 +3948,13 @@ async function searchPokemonCard(nome, codigo) {
       };
     }
     
-    console.warn(`❌ Não encontrada: ${nome} ${codigo}`);
+    console.warn(`❌ Não encontrada: ${nome} (${numero}/${total})`);
     return null;
     
   } catch (error) {
     console.error(`❌ Erro ao buscar ${nome}:`, error);
     return null;
   }
-}
 
 function renderCardGroups(collectionName, cards) {
   const filterYear = document.getElementById('filterYear')?.value || '';
