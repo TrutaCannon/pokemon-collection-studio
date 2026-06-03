@@ -3197,7 +3197,7 @@ function openCollectionDetail(collectionName) {
       <h3 style="margin-bottom: 1.5rem; font-weight: 600; font-size: 20px;">Cartas (${totalCards})</h3>
       
       <!-- FILTROS -->
-      <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+      <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: flex-end;">
         <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 200px;">
           <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #666;">Filtrar por Ano</label>
           <select id="filterYear" onchange="applyFilters('${collectionName}')" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
@@ -3213,16 +3213,16 @@ function openCollectionDetail(collectionName) {
             ${[...new Set(data.cards.filter(c => c.colecao).map(c => c.colecao))].sort().map(set => `<option value="${set}">${set}</option>`).join('')}
           </select>
         </div>
+        
+        <div style="display: flex; gap: 0.75rem;">
+          <button class="btn btn-small" onclick="openAddCardModal('${collectionName}')" style="padding: 0.75rem 1rem; font-size: 13px;">➕ Adicionar carta</button>
+          <button class="btn btn-small" onclick="openAddCardsFromListModal('${collectionName}')" style="padding: 0.75rem 1rem; font-size: 13px;">📋 Adicionar via lista</button>
+          <button class="btn btn-small" onclick="closeModal()" style="padding: 0.75rem 1rem; font-size: 13px;">Fechar</button>
+        </div>
       </div>
       
       <!-- GRUPOS DE CARTAS -->
       <div id="cardsGroupsContainer"></div>
-    </div>
-    
-    <div class="modal-buttons">
-      <button class="btn" onclick="openAddCardModal('${collectionName}')">➕ Adicionar carta</button>
-      <button class="btn" onclick="openAddCardsFromListModal('${collectionName}')">📋 Adicionar via lista</button>
-      <button class="btn" onclick="closeModal()">Fechar</button>
     </div>
   `;
   
