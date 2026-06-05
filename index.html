@@ -1711,6 +1711,27 @@ Venusaur,Base Set,003,https://...
 <script>
 const STORAGE_KEY = 'pokemon_collections'; // MANTÉM COMPATIBILIDADE COM v5
 
+// Mapeamento de sets Pokémon TCG
+const POKEMON_SETS = {
+  'base1': { name: 'Base Set', year: 1999, total: 102 },
+  'base2': { name: 'Base Set 2', year: 2000, total: 130 },
+  'base3': { name: 'Base Set 3', year: 2000, total: 102 },
+  'base4': { name: 'Base Set 4', year: 2000, total: 102 },
+  'jungle': { name: 'Jungle', year: 1999, total: 64 },
+  'fossil': { name: 'Fossil', year: 1999, total: 62 },
+  'rocket': { name: 'Team Rocket', year: 2000, total: 102 },
+  'gym1': { name: 'Gym Heroes', year: 2000, total: 132 },
+  'gym2': { name: 'Gym Challenge', year: 2000, total: 132 },
+  'neo1': { name: 'Neo Genesis', year: 2000, total: 111 },
+  'neo2': { name: 'Neo Discovery', year: 2000, total: 113 },
+  'neo3': { name: 'Neo Revelation', year: 2001, total: 105 },
+  'neo4': { name: 'Neo Destiny', year: 2001, total: 105 },
+  'ls': { name: 'Legendary Collection', year: 2002, total: 110 },
+  'ecard1': { name: 'Expedition Base', year: 2002, total: 165 },
+  'ecard2': { name: 'Aquapolis', year: 2003, total: 147 },
+  'ecard3': { name: 'Skyridge', year: 2003, total: 144 }
+};
+
 let currentModal = null;
 let editingCollectionName = null;
 let editingCoverType = 'pokedex'; // 'pokedex' ou 'detail'
@@ -3693,10 +3714,20 @@ function openAddCardsFromListModal(collectionName) {
     <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">🔍 <strong>Busca automática:</strong> Cole nome + código e a app busca automaticamente na base de dados!</p>
     <p style="color: #999; margin-bottom: 1rem; font-size: 12px;">Formato: <code>Nome (Número/Total)</code> — Exemplo: <code>Pikachu (25/102)</code></p>
     
+    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #333;">
+      📚 Qual set você está adicionando?
+    </label>
+    <select id="setSelector" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+      <option value="">-- Selecione um set --</option>
+      ${Object.entries(POKEMON_SETS).map(([id, set]) => 
+        `<option value="${id}">${set.name} (${set.year}) - ${set.total} cartas</option>`
+      ).join('')}
+    </select>
+    
     <textarea id="cardsListInput" placeholder="Pikachu (25/102)&#10;Charizard (4/130)&#10;Blastoise (2/102)&#10;Venusaur (3/102)&#10;Dragonite (5/102)&#10;&#10;(centenas de cartas...)&#10;&#10;Cole quantas cartas quiser!" style="width: 100%; height: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
     
     <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 1rem; margin-top: 1rem; border-radius: 4px; font-size: 12px; color: #2e7d32;">
-      ✨ <strong>O app vai:</strong> Buscar cada carta na API pelo número+total, preencher imagem, tipo, raridade e série corretamente!
+      ✨ <strong>O app vai:</strong> Buscar cada carta no set selecionado, preencher imagem, tipo, raridade e série corretamente!
     </div>
     
     <div class="modal-buttons">
@@ -3710,6 +3741,13 @@ function openAddCardsFromListModal(collectionName) {
 }
 
 function saveCardsFromList(collectionName) {
+  const setId = document.getElementById('setSelector').value.trim();
+  
+  if (!setId) {
+    alert('⚠️ Por favor, selecione um set primeiro!');
+    return;
+  }
+  
   const input = document.getElementById('cardsListInput').value.trim();
   
   if (!input) {
@@ -3812,7 +3850,7 @@ function saveCardsFromList(collectionName) {
       if (!nome) {
         promises.push(Promise.resolve(null));
       } else {
-        promises.push(searchPokemonCard(nome, numero, total).catch(err => {
+        promises.push(searchPokemonCard(nome, numero, total, setId).catch(err => {
           console.error('Erro ao buscar carta:', err);
           return null;
         }));
@@ -3889,8 +3927,8 @@ function saveCardsFromList(collectionName) {
   processNextCard();
 }
 
-async function searchPokemonCard(nome, numero, total) {
-  console.log(`🔍 Buscando: ${nome} (${numero}/${total})`);
+async function searchPokemonCard(nome, numero, total, setId = 'base1') {
+  console.log(`🔍 Buscando: ${nome} (${numero}/${total}) em ${POKEMON_SETS[setId]?.name || setId}`);
   
   if (!numero || !total) {
     console.log(`  ❌ Número ou total faltando!`);
@@ -3901,10 +3939,10 @@ async function searchPokemonCard(nome, numero, total) {
     const totalNum = parseInt(total);
     const numeroStr = String(numero);
     
-    console.log(`  📡 Query: q=number:${numeroStr} set:base1`);
+    console.log(`  📡 Query: q=number:${numeroStr} set:${setId}`);
     
     const response = await fetch(
-      `https://api.pokemontcg.io/v2/cards?q=number:${numeroStr} set:base1&pageSize=50`
+      `https://api.pokemontcg.io/v2/cards?q=number:${numeroStr} set:${setId}&pageSize=50`
     );
     
     if (!response.ok) {
@@ -3935,12 +3973,7 @@ async function searchPokemonCard(nome, numero, total) {
     console.log(`  🎯 Após filtrar por imagem: ${candidates.length} resultado(s)`);
     
     if (candidates.length === 0) {
-      console.log(`  ❌ Nenhuma carta encontrada no Base Set`);
-      return null;
-    }
-    
-    if (candidates.length === 0) {
-      console.log(`  ❌ FALHA: Nenhuma com printedTotal:${totalNum} OU sem imagem`);
+      console.log(`  ❌ Nenhuma carta encontrada no set ${POKEMON_SETS[setId]?.name || setId}`);
       return null;
     }
 
