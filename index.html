@@ -3434,12 +3434,14 @@ function addNewCard(collectionName) {
 }
 
 function removeCard(collectionName, cardIndex) {
-  if (!confirm('Remover esta carta?')) return;
-  
   const collections = getCollections();
-  collections[collectionName].cards.splice(cardIndex, 1);
-  saveCollections(collections);
-  openCollectionDetail(collectionName);
+  const card = collections[collectionName].cards[cardIndex];
+  
+  showConfirmDialog(`🗑️ Deletar "${card.name}"?`, () => {
+    collections[collectionName].cards.splice(cardIndex, 1);
+    saveCollections(collections);
+    openCollectionDetail(collectionName);
+  });
 }
 
 function editCardName(collectionName, cardIndex) {
@@ -3778,6 +3780,19 @@ function saveCardsFromList(collectionName) {
   
   // Processar cartas uma por uma
   const collections = getCollections();
+  
+  // Criar coleção se não existir
+  if (!collections[collectionName]) {
+    collections[collectionName] = {
+      cards: [],
+      description: '',
+      coverImage: null,
+      coverImageDetail: null,
+      ilustrador: ''
+    };
+    console.log(`✅ Coleção criada: "${collectionName}"`);
+  }
+  
   let cardsToAdd = [];
   let processedIndex = 0;
   
