@@ -3713,23 +3713,18 @@ function openAddCardsFromListModal(collectionName) {
   document.getElementById('modalTitle').textContent = 'Adicionar Cartas via Lista';
   
   document.getElementById('modalBody').innerHTML = `
-    <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">🔍 <strong>Busca automática:</strong> Cole nome + código e a app busca automaticamente na base de dados!</p>
-    <p style="color: #999; margin-bottom: 1rem; font-size: 12px;">Formato: <code>Nome (Número/Total)</code> — Exemplo: <code>Pikachu (25/102)</code></p>
+    <p style="color: #666; margin-bottom: 1rem; font-size: 14px;">🔍 <strong>Busca precisa:</strong> Forneça nome, código, ano e coleção para encontrar a carta exata!</p>
+    <p style="color: #999; margin-bottom: 1rem; font-size: 12px;">Formato: <code>Nome (Número/Total) Ano Coleção</code></p>
+    <p style="color: #999; margin-bottom: 1.5rem; font-size: 12px;"><strong>Exemplos:</strong><br/>
+      • Pikachu (025/102) 1999 Base Set<br/>
+      • Charizard (004/102) 1999 Base Set<br/>
+      • Blastoise (002/102) 1999 Base Set
+    </p>
     
-    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #333;">
-      📚 Qual set você está adicionando?
-    </label>
-    <select id="setSelector" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-      <option value="">-- Selecione um set --</option>
-      ${Object.entries(POKEMON_SETS).map(([id, set]) => 
-        `<option value="${id}">${set.name} (${set.year}) - ${set.total} cartas</option>`
-      ).join('')}
-    </select>
-    
-    <textarea id="cardsListInput" placeholder="Pikachu (25/102)&#10;Charizard (4/130)&#10;Blastoise (2/102)&#10;Venusaur (3/102)&#10;Dragonite (5/102)&#10;&#10;(centenas de cartas...)&#10;&#10;Cole quantas cartas quiser!" style="width: 100%; height: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
+    <textarea id="cardsListInput" placeholder="Pikachu (025/102) 1999 Base Set&#10;Charizard (004/102) 1999 Base Set&#10;Blastoise (002/102) 1999 Base Set&#10;&#10;Cole quantas cartas quiser!" style="width: 100%; height: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; resize: vertical;"></textarea>
     
     <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 1rem; margin-top: 1rem; border-radius: 4px; font-size: 12px; color: #2e7d32;">
-      ✨ <strong>O app vai:</strong> Buscar cada carta no set selecionado, preencher imagem, tipo, raridade e série corretamente!
+      ✨ <strong>O app vai:</strong> Usar nome + código + ano + coleção para encontrar a carta EXATA e trazer a imagem correta!
     </div>
     
     <div class="modal-buttons">
@@ -3798,31 +3793,35 @@ function saveCardsFromList(collectionName) {
   
   // Função para fazer parse da entrada
   function parseCardLine(line) {
-    // Novos formatos:
-    // "Pikachu (25/102)"
-    // "Charizard (4/130)"
-    // Fallback: "Pikachu 25/102" ou "Pikachu 25"
+    // Novo formato: "Nome (Número/Total) Ano Coleção"
+    // Exemplo: "Pikachu (025/102) 1999 Base Set"
     
     const trimmed = line.trim();
     
-    // Tentar format: "Nome (Número/Total)"
-    let match = trimmed.match(/^(.+?)\s*\(\s*(\d+)\s*\/\s*(\d+)\s*\)$/);
+    // Regex para: "Nome (Número/Total) Ano Coleção"
+    const match = trimmed.match(/^(.+?)\s*\(\s*(\d+)\s*\/\s*(\d+)\s*\)\s+(\d{4})\s+(.+)$/);
+    
     if (match) {
       return {
         nome: match[1].trim(),
         numero: match[2],
-        total: match[3]
+        total: match[3],
+        ano: match[4],
+        colecao: match[5].trim()
       };
     }
     
-    // Tentar format: "Nome Número/Total" (sem parênteses)
-    match = trimmed.match(/^(.+?)\s+(\d+)\s*\/\s*(\d+)$/);
-    if (match) {
+    // Fallback: tentar formato antigo "Nome (Número/Total)"
+    const fallback = trimmed.match(/^(.+?)\s*\(\s*(\d+)\s*\/\s*(\d+)\s*\)$/);
+    if (fallback) {
       return {
-        nome: match[1].trim(),
-        numero: match[2],
-        total: match[3]
+        nome: fallback[1].trim(),
+        numero: fallback[2],
+        total: fallback[3],
+        ano: '',
+        colecao: ''
       };
+    }
     }
     
     // Tentar format: "Nome Número" (sem total)
@@ -3857,7 +3856,7 @@ function saveCardsFromList(collectionName) {
     
     for (let i = 0; i < batchSize && processedIndex < lines.length; i++) {
       const line = lines[processedIndex];
-      const { nome, numero, total } = parseCardLine(line);
+      const { nome, numero, total, ano, colecao } = parseCardLine(line);
       
       batchIndices.push(processedIndex);
       processedIndex++;
@@ -3865,7 +3864,7 @@ function saveCardsFromList(collectionName) {
       if (!nome) {
         promises.push(Promise.resolve(null));
       } else {
-        promises.push(searchPokemonCard(nome, numero, total, setId).catch(err => {
+        promises.push(searchPokemonCard(nome, numero, total, setId, ano, colecao).catch(err => {
           console.error('Erro ao buscar carta:', err);
           return null;
         }));
@@ -3942,8 +3941,8 @@ function saveCardsFromList(collectionName) {
   processNextCard();
 }
 
-async function searchPokemonCard(nome, numero, total, setId = 'base1') {
-  console.log(`🔍 Buscando: ${nome} (${numero}/${total}) em ${POKEMON_SETS[setId]?.name || setId}`);
+async function searchPokemonCard(nome, numero, total, setId = 'base1', ano = '', colecao = '') {
+  console.log(`🔍 Buscando: ${nome} (${numero}/${total})${ano ? ` ${ano}` : ''}${colecao ? ` - ${colecao}` : ''}`);
   
   if (!numero || !total) {
     console.log(`  ❌ Número ou total faltando!`);
@@ -3954,10 +3953,15 @@ async function searchPokemonCard(nome, numero, total, setId = 'base1') {
     const totalNum = parseInt(total);
     const numeroStr = String(numero);
     
-    console.log(`  📡 Query: q=number:${numeroStr} set:${setId}`);
+    // Montar query com filtros
+    let query = `number:${numeroStr}`;
+    if (ano) query += ` releaseDate:${ano}`;
+    if (colecao) query += ` set.name:"${colecao}"`;
+    
+    console.log(`  📡 Query: ${query}`);
     
     const response = await fetch(
-      `https://api.pokemontcg.io/v2/cards?q=number:${numeroStr} set:${setId}&pageSize=50`
+      `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&pageSize=50`
     );
     
     if (!response.ok) {
@@ -3968,59 +3972,102 @@ async function searchPokemonCard(nome, numero, total, setId = 'base1') {
     const data = await response.json();
     
     if (!data.data || data.data.length === 0) {
-      console.log(`  ❌ Nenhuma carta #${numeroStr}`);
+      console.log(`  ⚠️ Nenhuma carta encontrada com esses filtros`);
+      
+      // Fallback: tentar apenas com número
+      if (ano || colecao) {
+        console.log(`  🔄 Tentando busca simplificada: só número...`);
+        const fallbackQuery = `number:${numeroStr}`;
+        const fallbackResponse = await fetch(
+          `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(fallbackQuery)}&pageSize=50`
+        );
+        
+        if (!fallbackResponse.ok) {
+          return null;
+        }
+        
+        const fallbackData = await fallbackResponse.json();
+        if (!fallbackData.data || fallbackData.data.length === 0) {
+          return null;
+        }
+        
+        // Usar dados do fallback
+        const candidates = fallbackData.data.filter(c => 
+          (c.images?.large || c.images?.small)
+        );
+        
+        if (candidates.length === 0) {
+          return null;
+        }
+        
+        const card = candidates[0];
+        console.log(`  ✅ Encontrada (fallback): ${card.name} - ${card.set?.name}`);
+        
+        let cardAno = '';
+        let cardColecao = '';
+        
+        if (card.set) {
+          cardColecao = card.set.name;
+          if (card.set.releaseDate) {
+            cardAno = card.set.releaseDate.substring(0, 4);
+          }
+        }
+        
+        return {
+          name: card.name,
+          ano: cardAno,
+          colecao: cardColecao,
+          image: card.images?.large || card.images?.small || '',
+          code: `${card.number}/${card.set?.printedTotal}`,
+          tipo: card.types?.[0] || '',
+          hp: card.hp || '',
+          raridade: card.rarity || '',
+          ilustrador: card.artist || '',
+          collected: false
+        };
+      }
+      
       return null;
     }
 
-    console.log(`  📊 Encontradas ${data.data.length} cartas com #${numeroStr}`);
-    
-    // DEBUG: Mostrar todas as opções
-    data.data.forEach((c, idx) => {
-      const hasImage = c.images?.large ? '✅' : '❌';
-      console.log(`     [${idx}] ${c.name} - set: ${c.set?.name} (${c.set?.printedTotal}) - imagem: ${hasImage}`);
-    });
+    console.log(`  📊 Encontradas ${data.data.length} cartas`);
 
-    // ===== FILTRAR POR IMAGEM =====
+    // Filtrar por imagem
     let candidates = data.data.filter(c => 
       (c.images?.large || c.images?.small)
     );
     
-    console.log(`  🎯 Após filtrar por imagem: ${candidates.length} resultado(s)`);
+    console.log(`  🎯 Com imagem: ${candidates.length} resultado(s)`);
     
     if (candidates.length === 0) {
-      console.log(`  ❌ Nenhuma carta encontrada no set ${POKEMON_SETS[setId]?.name || setId}`);
+      console.log(`  ❌ Nenhuma com imagem, tentando primeira mesmo sem imagem...`);
+      candidates = data.data;
+    }
+    
+    if (candidates.length === 0) {
       return null;
     }
 
     const card = candidates[0];
+    console.log(`  ✅ ENCONTRADA: ${card.name} - ${card.set?.name}`);
     
-    let ano = '';
-    let colecao = '';
+    let cardAno = '';
+    let cardColecao = '';
     
     if (card.set) {
-      colecao = card.set.name;
+      cardColecao = card.set.name;
       if (card.set.releaseDate) {
-        ano = card.set.releaseDate.substring(0, 4);
+        cardAno = card.set.releaseDate.substring(0, 4);
       }
     }
     
-    const imagemUrl = card.images?.large || card.images?.small || '';
-    const cardCode = `${card.number}/${card.set?.printedTotal}`;
-    
-    if (!imagemUrl) {
-      console.log(`  ❌ SEM IMAGEM!`);
-      return null;
-    }
-    
-    console.log(`  ✅ SUCESSO: ${card.name} (${cardCode}) - ${colecao} [${imagemUrl.substring(0, 50)}...]`);
-    
     return {
       name: card.name,
-      code: cardCode,
-      ano: ano,
-      colecao: colecao,
-      image: imagemUrl,
-      tipo: card.supertype || '',
+      ano: cardAno,
+      colecao: cardColecao,
+      image: card.images?.large || card.images?.small || '',
+      code: `${card.number}/${card.set?.printedTotal}`,
+      tipo: card.types?.[0] || '',
       hp: card.hp || '',
       raridade: card.rarity || '',
       ilustrador: card.artist || '',
